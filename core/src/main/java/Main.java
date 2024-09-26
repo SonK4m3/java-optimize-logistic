@@ -1,6 +1,6 @@
 import domain.*;
 import domain.display.Display;
-import domain.solver.MVRPSolver;
+import domain.solver.VRPSolver;
 import domain.time.PerformanceMeter;
 import domain.display.DisplayFactory;
 import domain.seed.VRPSeeding;
@@ -13,22 +13,22 @@ public class Main {
     static List<Customer> customerList = VRPSeeding.createCustomers();
     static List<Vehicle> vehicleList = VRPSeeding.createVehicles();
 
+    static final int TABU_LIST_SIZE = 1000;
+
     public static void main(String[] args) {
         // Display the locations of the depots, customers, and vehicles
         display.displayLocations(depotList, customerList, vehicleList);
 
-        // Create the initial solution
-        VRPSolution initialSolution = new VRPSolution(depotList, customerList, vehicleList);
-        display.displayMessage("Initial Solution:");
-        display.displaySolution(initialSolution);
-
         // Create the MVRPSolver and use the Greed Algorithm
-        MVRPSolver solver = new MVRPSolver();
-        solver.usingGreedAlgorithm();
-        display.displayMessage("Using Greed Algorithm");
-
+        VRPSolver solver = new VRPSolver(TABU_LIST_SIZE);
+        display.displayMessage("Using Tabu Search Algorithm");
+        
         // Solve the problem and display the solution
         Runnable solvingTask = () -> {
+            VRPSolution initialSolution = solver.initialSolution(new VRPSolution(depotList, customerList, vehicleList));
+            display.displayMessage("Initial Solution:");
+            display.displaySolution(initialSolution);
+
             VRPSolution solution = solver.solve(initialSolution);
 
             display.displayMessage("\nOptimal Solution:");
