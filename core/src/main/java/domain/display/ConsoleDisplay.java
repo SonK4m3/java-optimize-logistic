@@ -73,4 +73,9 @@ public class ConsoleDisplay implements Display {
             System.out.println();
         }
     }
+
+    @Override
+    public void displayMessage(String message) {
+        System.out.println(message);
+    }
 }

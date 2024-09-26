@@ -1,150 +1,121 @@
 package domain.solver;
 
-import api.score.HardSoftScore;
 import api.solution.PlanningSolution;
-import api.score.ScoreCalculator;
 import domain.Customer;
 import domain.Depot;
 import domain.VRPSolution;
 import domain.Vehicle;
-import domain.display.ConsoleDisplay;
 import domain.display.Display;
+import domain.display.DisplayFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class VRPSolver implements TabuSearch<VRPSolution> {
-    private final static int MAX_ITERATION = 10000;
+    private static final int MAX_ITERATION = 10000;
+    private static final int MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 10000;
     private final int tabuListSize;
-    private final Queue<PlanningSolution> tabuList = new LinkedList<>();
-    private final ScoreCalculator scoreCalculator = new ScoreCalculator();
-    Display display = new ConsoleDisplay();
+    private final Queue<PlanningSolution> tabuList;
+    private final Display display;
 
     public VRPSolver(int tabuListSize) {
         this.tabuListSize = tabuListSize;
+        this.tabuList = new LinkedList<>();
+        this.display = DisplayFactory.getDisplay(DisplayFactory.DisplayType.FILE, "core/src/main/java/logs/output.log");
     }
 
+    /**
+     * Solves the VRP using Tabu Search algorithm
+     * Iteratively improves the solution until a stopping criterion is met
+     */
     public VRPSolution solve(VRPSolution initialSolution) {
-        VRPSolution currentSolution = (VRPSolution) initialSolution.clone();
+        VRPSolution currentSolution = initialSolution.clone();
+        VRPSolution bestSolution = initialSolution.clone();
         tabuList.add(initialSolution);
 
-        VRPSolution bestSolution = (VRPSolution) initialSolution.clone();
-
         int iteration = 0;
-        while (iteration < MAX_ITERATION) {
-            List<VRPSolution> neighbors = this.generateNeighbors(currentSolution);
-            neighbors.removeIf(tabuList::contains);
-            VRPSolution bestNeighbor = neighbors.stream()
-                    .min(Comparator.comparingDouble(VRPSolution::calculateScore))
-                    .orElse(null);
+        int iterationsWithoutImprovement = 0;
+        while (iteration < MAX_ITERATION && iterationsWithoutImprovement < MAX_ITERATIONS_WITHOUT_IMPROVEMENT) {
+            List<VRPSolution> neighbors = generateNeighbors(currentSolution);
+            VRPSolution bestNeighbor = findBestNeighbor(neighbors);
 
             if (bestNeighbor == null) {
                 break;
             }
 
-            currentSolution = (VRPSolution) bestNeighbor.clone();
+            currentSolution = bestNeighbor.clone();
             if (currentSolution.calculateScore() < bestSolution.calculateScore()) {
-                bestSolution = (VRPSolution) currentSolution.clone();
-
-                System.out.println("--- step: " + iteration);
-                display.displaySolution(bestSolution);
+                bestSolution = currentSolution.clone();
+                iterationsWithoutImprovement = 0;
+                this.display.displayMessage("--- step: " + iteration);
+                this.display.displaySolution(bestSolution);
+            } else {
+                iterationsWithoutImprovement++;
             }
 
-            tabuList.add(currentSolution);
-            if (tabuList.size() > tabuListSize) {
-                tabuList.remove();
-            }
-
+            updateTabuList(currentSolution);
             iteration++;
         }
 
         return bestSolution;
     }
 
-    private Map<Depot, List<Customer>> assignCustomersToDepots(List<Depot> depots, List<Customer> customers) {
-        Map<Depot, List<Customer>> depotCustomers = new HashMap<>();
-        for (Depot depot : depots) {
-            depotCustomers.put(depot, new ArrayList<>());
-        }
-
-        for (Customer customer : customers) {
-            Depot closestDepot = depots.get(0);
-            double minDistance = Double.MAX_VALUE;
-            for (Depot depot : depots) {
-                double distance = customer.getLocation().getDistanceTo(depot.getLocation());
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestDepot = depot;
-                }
-            }
-            depotCustomers.get(closestDepot).add(customer);
-        }
-
-        return depotCustomers;
+    /**
+     * Finds the best non-tabu neighbor from a list of neighbors
+     */
+    private VRPSolution findBestNeighbor(List<VRPSolution> neighbors) {
+        return neighbors.stream()
+                .filter(solution -> !tabuList.contains(solution))
+                .min(Comparator.comparingDouble(VRPSolution::calculateScore))
+                .orElse(null);
     }
 
     /**
-     * Vehicles are assigned to the depot that has contains enough the customer demands
-     *
-     * @param vehicles       the list of vehicles
-     * @param depots         the list of depots
-     * @param depotCustomers the list of customers clustering follow depots
+     * Updates the tabu list with a new solution
+     * Removes the oldest solution if the list size exceeds the limit
      */
-    private void assignVehiclesToDepots(List<Vehicle> vehicles, List<Depot> depots, Map<Depot, List<Customer>> depotCustomers) {
-        // calculate the total demand of customers' depots
-        Map<Depot, Integer> depotTotalDemand = new HashMap<>();
-        for (Depot depot : depots) {
-            depotTotalDemand.put(
-                    depot,
-                    depotCustomers.get(depot).stream()
-                            .mapToInt(Customer::getDemand)
-                            .sum()
-            );
-        }
-
-        for (Vehicle vehicle : vehicles) {
-            Depot bestDepot = null;
-            int minTotalDemandDifference = Integer.MAX_VALUE;
-
-            for (Depot depot : depots) {
-                int demandDifference = Math.abs(vehicle.getCapacity() - depotTotalDemand.get(depot));
-                if (demandDifference < minTotalDemandDifference) {
-                    minTotalDemandDifference = demandDifference;
-                    bestDepot = depot;
-                }
-            }
-
-            vehicle.setDepot(bestDepot);
-            depotTotalDemand.put(bestDepot, depotTotalDemand.get(bestDepot) - vehicle.getCapacity());
+    private void updateTabuList(VRPSolution solution) {
+        tabuList.add(solution);
+        if (tabuList.size() > tabuListSize) {
+            tabuList.remove();
         }
     }
 
+    /**
+     * Generates an initial solution for the VRP
+     * Assigns customers to depots and vehicles, ensuring capacity constraints
+     */
     @Override
     public VRPSolution initialSolution(VRPSolution rawSolution) {
-        Map<Depot, List<Customer>> depotCustomers = assignCustomersToDepots(
-                rawSolution.getDepotList(),
-                rawSolution.getCustomerList()
-        );
-
-        rawSolution.getVehicleList().sort(Comparator.comparingInt(v -> -v.getCapacity()));
-
+        Map<Depot, List<Customer>> depotCustomers = assignCustomersToDepots(rawSolution.getDepotList(), rawSolution.getCustomerList());
+        rawSolution.getVehicleList().sort(Comparator.comparingInt(Vehicle::getCapacity).reversed());
         assignVehiclesToDepots(rawSolution.getVehicleList(), rawSolution.getDepotList(), depotCustomers);
 
         Set<Customer> assignedCustomers = new HashSet<>();
-
         for (Vehicle vehicle : rawSolution.getVehicleList()) {
             List<Customer> customers = depotCustomers.get(vehicle.getDepot());
-            customers.sort(
-                    Comparator.comparingDouble(customer ->
-                            vehicle.getDepot().getLocation()
-                                    .getDistanceTo(customer.getLocation())
-                    )
-            );
+            if (customers != null && !customers.isEmpty()) {
+                customers.sort(Comparator.comparingDouble(customer -> 
+                    vehicle.getDepot().getLocation().getDistanceTo(customer.getLocation())));
 
-            // add un-assigned customers to the vehicle
-            for (Customer customer : customers) {
-                if (!assignedCustomers.contains(customer) && vehicle.canAddCustomer(customer)) {
-                    vehicle.getCustomerList().add(customer);
-                    assignedCustomers.add(customer);
+                for (Customer customer : customers) {
+                    if (!assignedCustomers.contains(customer) && vehicle.canAddCustomer(customer)) {
+                        vehicle.addCustomer(customer);
+                        assignedCustomers.add(customer);
+                    }
+                }
+            }
+        }
+
+        // Ensure that each vehicle has at least one customer
+        for (Vehicle vehicle : rawSolution.getVehicleList()) {
+            if (vehicle.getCustomerList().isEmpty()) {
+                for (Customer customer : rawSolution.getCustomerList()) {
+                    if (!assignedCustomers.contains(customer) && vehicle.canAddCustomer(customer)) {
+                        vehicle.addCustomer(customer);
+                        assignedCustomers.add(customer);
+                        break;
+                    }
                 }
             }
         }
@@ -152,76 +123,107 @@ public class VRPSolver implements TabuSearch<VRPSolution> {
         return rawSolution;
     }
 
+    /**
+     * Generates neighboring solutions by applying various operators
+     * Includes intra-route swaps, inter-route swaps, and relocations
+     */
     @Override
     public List<VRPSolution> generateNeighbors(VRPSolution currentSolution) {
         List<VRPSolution> neighbors = new ArrayList<>();
+        neighbors.addAll(generateIntraRouteSwaps(currentSolution));
+        neighbors.addAll(generateInterRouteSwaps(currentSolution));
+        neighbors.addAll(generateRelocations(currentSolution));
+        return neighbors;
+    }
 
-        currentSolution.getVehicleList().forEach(v -> {
-            // Swap customers between routes (ensuring depot remains first)
-            for (int i = 0; i < v.getCustomerList().size(); i++) {
-                for (int j = i + 1; j < v.getCustomerList().size(); j++) {
-                    VRPSolution neighbor = (VRPSolution) currentSolution.clone();
-
-                    Customer temp = v.getCustomerList().get(i);
-                    v.getCustomerList().set(i, v.getCustomerList().get(j));
-                    v.getCustomerList().set(j, temp);
+    /**
+     * Generates neighboring solutions by swapping customers within the same route
+     */
+    private List<VRPSolution> generateIntraRouteSwaps(VRPSolution solution) {
+        List<VRPSolution> neighbors = new ArrayList<>();
+        for (Vehicle vehicle : solution.getVehicleList()) {
+            if (vehicle.getCustomerList().size() < 2) continue;
+            for (int i = 0; i < vehicle.getCustomerList().size(); i++) {
+                for (int j = i + 1; j < vehicle.getCustomerList().size(); j++) {
+                    VRPSolution neighbor = solution.clone();
+                    Vehicle clonedVehicle = getVehicleById(neighbor.getVehicleList(), vehicle.getId());
+                    Collections.swap(clonedVehicle.getCustomerList(), i, j);
                     neighbors.add(neighbor);
                 }
             }
-        });
+        }
+        return neighbors;
+    }
 
-        // 2. Hoán vị khách hàng giữa các xe (Inter-route Swaps)
-        for (int i = 0; i < currentSolution.getVehicleList().size(); i++) {
-            for (int j = i + 1; j < currentSolution.getVehicleList().size(); j++) {
-                Vehicle v1 = currentSolution.getVehicleList().get(i);
-                Vehicle v2 = currentSolution.getVehicleList().get(j);
-                for (int k = 0; k < v1.getCustomerList().size(); k++) { // Bắt đầu từ 1 để tránh depot
+    /**
+     * Generates neighboring solutions by swapping customers between different routes
+     */
+    private List<VRPSolution> generateInterRouteSwaps(VRPSolution solution) {
+        List<VRPSolution> neighbors = new ArrayList<>();
+        List<Vehicle> vehicles = solution.getVehicleList();
+        for (int i = 0; i < vehicles.size(); i++) {
+            for (int j = i + 1; j < vehicles.size(); j++) {
+                Vehicle v1 = vehicles.get(i);
+                Vehicle v2 = vehicles.get(j);
+                if (v1.getCustomerList().isEmpty() || v2.getCustomerList().isEmpty()) continue;
+                for (int k = 0; k < v1.getCustomerList().size(); k++) {
                     for (int l = 0; l < v2.getCustomerList().size(); l++) {
-                        VRPSolution neighbor = (VRPSolution) currentSolution.clone();
+                        VRPSolution neighbor = solution.clone();
                         Vehicle clonedV1 = getVehicleById(neighbor.getVehicleList(), v1.getId());
                         Vehicle clonedV2 = getVehicleById(neighbor.getVehicleList(), v2.getId());
-                        swapCustomersBetweenVehicles(clonedV1, clonedV2, k, l);
-                        neighbors.add(neighbor);
-                    }
-                }
-            }
-        }
-
-        // 3. Chèn khách hàng vào một tuyến đường khác (Relocation)
-        for (Vehicle vehicle : currentSolution.getVehicleList()) {
-            for (int i = 0; i < vehicle.getCustomerList().size(); i++) {
-                Customer customer = vehicle.getCustomerList().get(i);
-                for (Vehicle otherVehicle : currentSolution.getVehicleList()) {
-                    if (vehicle != otherVehicle) {
-                        for (int j = 0; j <= otherVehicle.getCustomerList().size(); j++) {
-                            VRPSolution neighbor = (VRPSolution) currentSolution.clone();
-
-                            Vehicle clonedVehicle = vehicle.clone();
-                            Vehicle clonedOtherVehicle = otherVehicle.clone();
-                            relocateCustomer(clonedVehicle, clonedOtherVehicle, customer, i, j);
+                        if (swapCustomersBetweenVehicles(clonedV1, clonedV2, k, l)) {
                             neighbors.add(neighbor);
                         }
                     }
                 }
             }
         }
-
         return neighbors;
     }
 
-    private void swapCustomersBetweenVehicles(Vehicle v1, Vehicle v2, int index1, int index2) {
-        if (index1 < 0 || index1 >= v1.getCustomerList().size() || index2 < 0 || index2 >= v2.getCustomerList().size()) {
-            throw new IllegalArgumentException("Invalid customer indices");
+    /**
+     * Generates neighboring solutions by relocating customers between routes
+     */
+    private List<VRPSolution> generateRelocations(VRPSolution solution) {
+        List<VRPSolution> neighbors = new ArrayList<>();
+        for (Vehicle fromVehicle : solution.getVehicleList()) {
+            if (fromVehicle.getCustomerList().isEmpty()) continue;
+            for (int i = 0; i < fromVehicle.getCustomerList().size(); i++) {
+                for (Vehicle toVehicle : solution.getVehicleList()) {
+                    if (fromVehicle != toVehicle) {
+                        for (int j = 0; j <= toVehicle.getCustomerList().size(); j++) {
+                            VRPSolution neighbor = solution.clone();
+                            Vehicle clonedFromVehicle = getVehicleById(neighbor.getVehicleList(), fromVehicle.getId());
+                            Vehicle clonedToVehicle = getVehicleById(neighbor.getVehicleList(), toVehicle.getId());
+                            if (relocateCustomer(clonedFromVehicle, clonedToVehicle, i, j)) {
+                                neighbors.add(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
         }
-
-        Customer customer1 = v1.getCustomerList().get(index1);
-        Customer customer2 = v2.getCustomerList().get(index2);
-
-        v1.getCustomerList().set(index1, customer2);
-        v2.getCustomerList().set(index2, customer1);
+        return neighbors;
     }
 
-    // Phương thức tìm Vehicle theo ID
+    /**
+     * Swaps customers between two vehicles if capacity constraints are met
+     */
+    private boolean swapCustomersBetweenVehicles(Vehicle v1, Vehicle v2, int index1, int index2) {
+        Customer c1 = v1.getCustomerList().get(index1);
+        Customer c2 = v2.getCustomerList().get(index2);
+        
+        if (v1.canAddCustomer(c2) && v2.canAddCustomer(c1)) {
+            v1.getCustomerList().set(index1, c2);
+            v2.getCustomerList().set(index2, c1);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Retrieves a vehicle by its ID from a list of vehicles
+     */
     private Vehicle getVehicleById(List<Vehicle> vehicles, long id) {
         return vehicles.stream()
                 .filter(v -> v.getId() == id)
@@ -229,9 +231,72 @@ public class VRPSolver implements TabuSearch<VRPSolution> {
                 .orElseThrow(() -> new RuntimeException("Vehicle not found with id: " + id));
     }
 
-    // Phương thức di chuyển một khách hàng sang một tuyến đường khác
-    private void relocateCustomer(Vehicle fromVehicle, Vehicle toVehicle, Customer customer, int fromIndex, int toIndex) {
-        fromVehicle.getCustomerList().remove(fromIndex);
-        toVehicle.getCustomerList().add(toIndex, customer);
+    /**
+     * Relocates a customer from one vehicle to another if capacity constraints are met
+     */
+    private boolean relocateCustomer(Vehicle fromVehicle, Vehicle toVehicle, int fromIndex, int toIndex) {
+        if (fromVehicle.getCustomerList().isEmpty()) {
+            return false;
+        }
+        Customer customer = fromVehicle.getCustomerList().get(fromIndex);
+        if (toVehicle.canAddCustomer(customer)) {
+            fromVehicle.getCustomerList().remove(fromIndex);
+            toVehicle.getCustomerList().add(toIndex, customer);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Assigns customers to their nearest depot
+     */
+    private Map<Depot, List<Customer>> assignCustomersToDepots(List<Depot> depots, List<Customer> customers) {
+        Map<Depot, List<Customer>> result = depots.stream()
+                .collect(Collectors.toMap(depot -> depot, depot -> new ArrayList<>()));
+        
+        for (Customer customer : customers) {
+            Depot nearestDepot = findNearestDepot(customer, depots);
+            result.get(nearestDepot).add(customer);
+        }
+        
+        return result;
+    }
+
+    /**
+     * Finds the nearest depot for a given customer
+     */
+    private Depot findNearestDepot(Customer customer, List<Depot> depots) {
+        return depots.stream()
+                .min(Comparator.comparingDouble(depot -> 
+                    customer.getLocation().getDistanceTo(depot.getLocation())))
+                .orElseThrow(() -> new RuntimeException("No depot found"));
+    }
+
+    /**
+     * Assigns vehicles to depots based on capacity and demand
+     */
+    private void assignVehiclesToDepots(List<Vehicle> vehicles, List<Depot> depots, Map<Depot, List<Customer>> depotCustomers) {
+        Map<Depot, Integer> depotTotalDemand = calculateDepotTotalDemand(depotCustomers);
+        
+        for (Vehicle vehicle : vehicles) {
+            Depot bestDepot = depots.stream()
+                    .min(Comparator.comparingInt(depot -> 
+                        Math.abs(vehicle.getCapacity() - depotTotalDemand.getOrDefault(depot, 0))))
+                    .orElse(depots.get(0));
+        
+            vehicle.setDepot(bestDepot);
+            depotTotalDemand.put(bestDepot, depotTotalDemand.getOrDefault(bestDepot, 0) - vehicle.getCapacity());
+        }
+    }
+
+    /**
+     * Calculates the total demand for each depot based on assigned customers
+     */
+    private Map<Depot, Integer> calculateDepotTotalDemand(Map<Depot, List<Customer>> depotCustomers) {
+        return depotCustomers.entrySet().stream()
+                .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry -> entry.getValue().stream().mapToInt(Customer::getDemand).sum()
+                ));
     }
 }

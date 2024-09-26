@@ -15,16 +15,21 @@ public class HardSoftScore {
         this.hardSoftConstraints = hardSoftConstraints;
     }
 
+    /**
+     * Calculates the score of the solution based on hard and soft constraints.
+     * If any hard constraint is not satisfied, returns HARD_SCORE_INFINITY.
+     * Otherwise, returns the sum of the scores of all satisfied constraints.
+     *
+     * @return the calculated score
+     */
     public double calculateScore() {
-        // Calculate soft score
-        double softScore = 0;
+        double totalScore = 0;
         for (Constraint constraint : this.hardSoftConstraints) {
             if (!constraint.isSatisfied(solution)) {
                 return HARD_SCORE_INFINITY;
             }
-            softScore += constraint.getScore(solution);
+            totalScore += constraint.getScore(solution);
         }
-
-        return softScore;
+        return totalScore;
     }
 }

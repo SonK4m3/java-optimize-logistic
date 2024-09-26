@@ -3,11 +3,11 @@ package domain;
 import api.score.HardSoftScore;
 import api.solution.PlanningSolution;
 import api.solution.ProblemFactCollectionProperty;
-import domain.geo.EuclideanDistanceCalculator;
 import solver.VehicleRoutingConstraintProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VRPSolution implements PlanningSolution, Cloneable {
     private List<Depot> depotList;
@@ -16,14 +16,14 @@ public class VRPSolution implements PlanningSolution, Cloneable {
     private HardSoftScore hardSoftScore;
 
     public VRPSolution() {
-
+        // Default constructor
     }
 
     public VRPSolution(List<Depot> depotList, List<Customer> customerList, List<Vehicle> vehicleList) {
-        this.depotList = depotList;
-        this.customerList = customerList;
-        this.vehicleList = vehicleList;
-        this.hardSoftScore = new HardSoftScore(this, new VehicleRoutingConstraintProvider().defineConstraints(this));
+        this.depotList = new ArrayList<>(depotList);
+        this.customerList = new ArrayList<>(customerList);
+        this.vehicleList = new ArrayList<>(vehicleList);
+        this.hardSoftScore = new HardSoftScore(this, new VehicleRoutingConstraintProvider().defineConstraints());
     }
 
     @Override
@@ -36,42 +36,35 @@ public class VRPSolution implements PlanningSolution, Cloneable {
         return hardSoftScore.calculateScore();
     }
 
-
     @Override
-    public Object clone() {
+    public VRPSolution clone() {
         try {
             VRPSolution clone = (VRPSolution) super.clone();
-
-            clone.depotList = new ArrayList<>();
-            for (Depot depot : depotList) {
-                clone.depotList.add(new Depot(depot.getId(), depot.getLocation()));
-            }
-
-            clone.customerList = new ArrayList<>();
-            for (Customer customer : customerList) {
-                clone.customerList.add(new Customer(customer.getId(), customer.getLocation(), customer.getDemand()));
-            }
-
-            clone.vehicleList = new ArrayList<>();
-            for (Vehicle vehicle : vehicleList) {
-                clone.vehicleList.add(vehicle.clone());
-            }
-
+            clone.depotList = depotList.stream()
+                    .map(depot -> new Depot(depot.getId(), depot.getLocation()))
+                    .collect(Collectors.toList());
+            clone.customerList = customerList.stream()
+                    .map(customer -> new Customer(customer.getId(), customer.getLocation(), customer.getDemand()))
+                    .collect(Collectors.toList());
+            clone.vehicleList = vehicleList.stream()
+                    .map(Vehicle::clone)
+                    .collect(Collectors.toList());
+            clone.hardSoftScore = new HardSoftScore(clone, new VehicleRoutingConstraintProvider().defineConstraints());
             return clone;
         } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
+            throw new AssertionError("Cloning should be supported", e);
         }
     }
 
     public List<Depot> getDepotList() {
-        return depotList;
+        return new ArrayList<>(depotList);
     }
 
     public List<Customer> getCustomerList() {
-        return customerList;
+        return new ArrayList<>(customerList);
     }
 
     public List<Vehicle> getVehicleList() {
-        return vehicleList;
+        return new ArrayList<>(vehicleList);
     }
 }

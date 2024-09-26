@@ -5,6 +5,8 @@ import domain.*;
 import java.util.List;
 
 public interface Display {
+    void displayMessage(String message);
+
     void displayCustomers(List<Customer> customers);
 
     void displayVehicles(List<Vehicle> vehicles);
