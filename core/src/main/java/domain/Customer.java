@@ -3,7 +3,7 @@ package domain;
 import api.solution.ProblemFactCollectionProperty;
 import java.util.Objects;
 
-public class Customer implements ProblemFactCollectionProperty, Cloneable {
+public class Customer extends ProblemFactCollectionProperty implements Cloneable {
     private final long id;
     private final Location location;
     private final int demand;

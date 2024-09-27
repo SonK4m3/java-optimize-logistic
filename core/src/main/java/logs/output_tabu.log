@@ -1,0 +1,46 @@
+--------------------
+Depot ID: 1 at (0.0, 5.0)
+Depot ID: 2 at (8.0, 7.0)
+Depot ID: 3 at (5.0, 10.0)
+Depot ID: 4 at (2.0, 8.0)
+--------------------
+Customer ID: 1 at (2.0, 3.0)
+Customer ID: 2 at (5.0, 1.0)
+Customer ID: 3 at (1.0, 4.0)
+Customer ID: 4 at (4.0, 5.0)
+Customer ID: 5 at (8.0, 3.0)
+Customer ID: 6 at (8.0, 8.0)
+Customer ID: 7 at (4.0, 7.0)
+Customer ID: 8 at (3.0, 6.0)
+Customer ID: 9 at (7.0, 2.0)
+Customer ID: 10 at (1.0, 9.0)
+Customer ID: 11 at (6.0, 4.0)
+Customer ID: 12 at (2.0, 8.0)
+Customer ID: 13 at (3.0, 5.0)
+Customer ID: 14 at (7.0, 7.0)
+Customer ID: 15 at (9.0, 1.0)
+--------------------
+Vehicle ID: 1 with capacity: 10
+Vehicle ID: 2 with capacity: 15
+Vehicle ID: 3 with capacity: 20
+Vehicle ID: 4 with capacity: 25
+Vehicle ID: 5 with capacity: 18
+Vehicle ID: 6 with capacity: 12
+--------------------
+New Solution:
+Vehicle 1 : D1 
+Vehicle 2 : D2 
+Vehicle 3 : D3 
+Vehicle 4 : D4 
+Vehicle 5 : D1 
+Vehicle 6 : D2 
+Total: 0.00
+
+Optimal Solution:
+Vehicle 1 : D1 3 1 
+Vehicle 2 : D2 13 2 
+Vehicle 3 : D3 12 10 7 
+Vehicle 4 : D4 8 4 
+Vehicle 5 : D1 5 
+Vehicle 6 : D2 6 
+Total: 6633161.09

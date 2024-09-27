@@ -24,6 +24,15 @@ public class VRPSolution implements PlanningSolution, Cloneable {
         this.customerList = new ArrayList<>(customerList);
         this.vehicleList = new ArrayList<>(vehicleList);
         this.hardSoftScore = new HardSoftScore(this, new VehicleRoutingConstraintProvider().defineConstraints());
+        assignDepotsToVehicles();
+    }
+
+    private void assignDepotsToVehicles() {
+        for (int i = 0; i < vehicleList.size(); i++) {
+            Vehicle vehicle = vehicleList.get(i);
+            Depot depot = depotList.get(i % depotList.size());
+            vehicle.setDepot(depot);
+        }
     }
 
     @Override
@@ -50,6 +59,7 @@ public class VRPSolution implements PlanningSolution, Cloneable {
                     .map(Vehicle::clone)
                     .collect(Collectors.toList());
             clone.hardSoftScore = new HardSoftScore(clone, new VehicleRoutingConstraintProvider().defineConstraints());
+            clone.assignDepotsToVehicles();
             return clone;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("Cloning should be supported", e);

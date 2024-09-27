@@ -1,12 +1,12 @@
 package domain.display;
 
 public class DisplayFactory {
-    
+
     public enum DisplayType {
         FILE,
         CONSOLE
     }
-    
+
     public static Display getDisplay(DisplayType type, String... args) {
         switch (type) {
             case FILE:

@@ -14,16 +14,16 @@ public class Solver<Solution_ extends PlanningSolution> {
         this.algorithm = algorithm;
     }
 
-    public Solution_ solve(Solution_ initialSolution) {
-        if(initialSolution == null) {
-            throw new IllegalArgumentException("Initial solution cannot be null");
+    public Solution_ solve(Solution_ newSolution) {
+        if(newSolution == null) {
+            throw new IllegalArgumentException("New solution cannot be null");
         }
 
         if(algorithm == null) {
             throw new IllegalArgumentException("Algorithm cannot be null");
         }
 
-        return algorithm.solve(initialSolution);
+        return algorithm.solve(newSolution);
     }
 
     public void setAlgorithm(PlanningAlgorithm<Solution_> algorithm) {

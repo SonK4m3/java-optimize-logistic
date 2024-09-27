@@ -14,6 +14,7 @@ public class Vehicle implements Cloneable {
         this.id = id;
         this.capacity = capacity;
         this.customerList = new ArrayList<>();
+        this.depot = null;
     }
 
     public long getId() {
@@ -43,8 +44,6 @@ public class Vehicle implements Cloneable {
     public void addCustomer(Customer customer) {
         if (canAddCustomer(customer)) {
             this.customerList.add(customer);
-        } else {
-            throw new IllegalArgumentException("Cannot add customer. Exceeds vehicle capacity.");
         }
     }
 
