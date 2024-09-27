@@ -27,4 +27,21 @@ Vehicle ID: 4 with capacity: 25
 Vehicle ID: 5 with capacity: 18
 Vehicle ID: 6 with capacity: 12
 --------------------
+Using Tabu Search Algorithm
 Initial Solution:
+Vehicle 1 : D1 3 1 
+Vehicle 2 : D1 13 2 
+Vehicle 3 : D4 12 10 7 
+Vehicle 4 : D4 8 4 
+Vehicle 5 : D3 5 
+Vehicle 6 : D1 6 
+Total: 7366330.05
+
+Optimal Solution:
+Vehicle 1 : D1 7 8 
+Vehicle 2 : D1 10 13 1 
+Vehicle 3 : D4 3 5 2 4 
+Vehicle 4 : D4 12 6 
+Vehicle 5 : D3 
+Vehicle 6 : D1 
+Total: 6353278.75
