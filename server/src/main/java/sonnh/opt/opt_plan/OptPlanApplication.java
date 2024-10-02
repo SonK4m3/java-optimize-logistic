@@ -5,7 +5,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"main.java.sonnh.opt.opt_plan.controller", "main.java.sonnh.opt.opt_plan.service"})
+@ComponentScan(basePackages = {
+	"sonnh.opt.opt_plan.controller",
+	"sonnh.opt.opt_plan.service",
+	"sonnh.opt.opt_plan.model",
+	"sonnh.opt.opt_plan.repository",
+	"sonnh.opt.opt_plan.config",
+	"domain.solver" // Add this to scan for VRPSolver
+})
 public class OptPlanApplication {
 
 	public static void main(String[] args) {

@@ -1,4 +1,4 @@
-package main.java.sonnh.opt.opt_plan.controller;
+package sonnh.opt.opt_plan.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

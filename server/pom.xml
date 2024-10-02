@@ -37,7 +37,7 @@
 
 		<!-- Core -->
 		<dependency>
-			<groupId>org.example</groupId>
+			<groupId>sonnh.core</groupId>
 			<artifactId>core</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
@@ -54,15 +54,39 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<!-- Spring Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- PostgreSQL database -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<excludeDevtools>false</excludeDevtools>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>sonnh.opt.opt_plan.OptPlanApplication</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
