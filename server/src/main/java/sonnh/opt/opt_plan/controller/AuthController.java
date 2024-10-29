@@ -1,19 +1,87 @@
 package sonnh.opt.opt_plan.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+import sonnh.opt.opt_plan.model.User;
+import sonnh.opt.opt_plan.model.UserDetailsImpl;
+import sonnh.opt.opt_plan.payload.ApiResponse;
+import sonnh.opt.opt_plan.payload.request.LoginRequest;
+import sonnh.opt.opt_plan.payload.request.SignupRequest;
+import sonnh.opt.opt_plan.payload.response.JwtResponse;
+import sonnh.opt.opt_plan.repository.UserRepository;
+import sonnh.opt.opt_plan.util.JwtUtil;
+import sonnh.opt.opt_plan.constant.common.Api;
+import sonnh.opt.opt_plan.exception.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping(Api.AUTH_ROUTE)
+@CrossOrigin(origins = "*", maxAge = 3600)
+@RequiredArgsConstructor
+@Tag(name = "Authentication", description = "APIs for user authentication")
 public class AuthController {
-    @GetMapping("/login")
-    public String login() {
-        return "Login endpoint";
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final PasswordEncoder encoder;
+    private final JwtUtil jwtUtils;
+
+    @Operation(summary = "Authenticate user")
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<JwtResponse>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+            JwtResponse response = JwtResponse.builder().token(jwt).id(userDetails.getId())
+                    .username(userDetails.getUsername()).email(userDetails.getEmail()).roles(userDetails
+                            .getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
+                    .expiresIn(jwtUtils.getJwtExpirationMs()).build();
+
+            return ResponseEntity.ok(ApiResponse.success("Login successful", response));
+        } catch (AuthenticationException e) {
+            throw new sonnh.opt.opt_plan.exception.AuthenticationException("Invalid username or password");
+        }
     }
 
-    @GetMapping("/register")
-    public String register() {
-        return "Registration endpoint";
+    @Operation(summary = "Register user", description = "Registers a new user in the system")
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<String>> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        // Validate username uniqueness
+        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Username is already taken"));
+        }
+
+        // Validate email uniqueness
+        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Email is already in use"));
+        }
+
+        // Create and save new user
+        User user = new User(signUpRequest.getUsername(), signUpRequest.getEmail(),
+                encoder.encode(signUpRequest.getPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully"));
+    }
+
+    @Operation(summary = "Logout user", description = "Invalidates user session and clears security context")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logoutUser() {
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
     }
 }
