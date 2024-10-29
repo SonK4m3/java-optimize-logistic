@@ -27,7 +27,7 @@ public class WebSecurityConfig {
     private final UnauthorizedHandler unauthorizedHandler;
     private final JwtRequestFilter jwtRequestFilter;
 
-    private static final String[] WHITE_LIST_URLS = { "/", "/api/auth/**", "/swagger-ui/**", "/api-docs/**",
+    private static final String[] WHITE_LIST_URLS = { "/", Api.AUTH_ROUTE + "/**", "/swagger-ui/**", "/api-docs/**",
             "/actuator/**", "/error" };
 
     @Bean
