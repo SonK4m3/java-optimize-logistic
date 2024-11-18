@@ -48,4 +48,5 @@ public class WarehouseCreateRequest {
 	private Boolean hasSecuritySystem;
 	private Double temperatureMin;
 	private Double temperatureMax;
+	private Double area;
 }

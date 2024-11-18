@@ -35,9 +35,9 @@ public class WarehouseServiceImpl implements WarehouseService {
 		Warehouse warehouse = Warehouse.builder().code(request.getCode())
 				.name(request.getName()).address(request.getAddress())
 				.phone(request.getPhone()).email(request.getEmail())
-				.latitude(request.getLatitude()).longitude(request.getLongitude())
-				.capacity(request.getTotalCapacity()).currentOccupancy(0).isActive(true)
-				.build();
+				.area(request.getArea()).latitude(request.getLatitude())
+				.longitude(request.getLongitude()).capacity(request.getTotalCapacity())
+				.currentOccupancy(0).isActive(true).build();
 
 		warehouse = warehouseRepository.save(warehouse);
 		log.info("Successfully created warehouse with ID: {}", warehouse.getId());

@@ -12,6 +12,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import sonnh.opt.opt_plan.constant.enums.WarehouseType;
+
 @Entity
 @Table(name = "warehouses")
 @Data
@@ -66,6 +68,19 @@ public class Warehouse {
 
 	@OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
 	private List<WarehouseProduct> warehouseProducts;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private WarehouseType type;
+
+	@Column(nullable = false)
+	private Double area;
+
+	@OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+	private List<StorageArea> storageAreas;
+
+	@OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
+	private List<WarehouseReceipt> warehouseReceipts;
 
 	// Helper method to add product
 	public void addProduct(Product product, int quantity, String location) {

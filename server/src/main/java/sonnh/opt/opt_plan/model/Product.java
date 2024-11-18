@@ -5,11 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 import java.util.List;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import sonnh.opt.opt_plan.constant.enums.StorageCondition;
 
 @Entity
 @Table(name = "products")
@@ -22,48 +20,27 @@ public class Product {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false, unique = true)
+	private String code;
+
 	@Column(nullable = false)
 	private String name;
 
-	private String description;
-	private String sku;
+	@Column(nullable = false)
+	private String barcode;
 
 	@Column(nullable = false)
-	private Double price;
+	private String unit; // KG, PCS, BOX...
 
+	private Double length;
+	private Double width;
+	private Double height;
 	private Double weight;
-	private String dimensions; // Format: LxWxH
-	private Boolean isFragile;
-	private Boolean isDangerous;
-	private Boolean requiresRefrigeration;
 
-	@Column(nullable = false)
-	private Integer minStockLevel;
-
-	@Column(nullable = false)
-	private Integer maxStockLevel;
-
-	@ManyToOne
-	@JoinColumn(name = "category_id")
-	private Category category;
+	@Enumerated(EnumType.STRING)
+	private StorageCondition storageCondition; // NORMAL, COLD, FROZEN,
+												// DANGEROUS
 
 	@OneToMany(mappedBy = "product")
-	private List<OrderDetail> orderDetails;
-
-	@OneToMany(mappedBy = "product")
-	private List<Inventory> inventories;
-
-	private String manufacturer;
-	private String origin;
-	private String unit; // e.g., pieces, kg, liters
-	private String shelfLife;
-	private String storageInstructions;
-
-	@CreationTimestamp
-	private LocalDateTime createdAt;
-	private String createdBy;
-	@UpdateTimestamp
-	private LocalDateTime updatedAt;
-	private String updatedBy;
-	private Boolean isActive;
+	private List<WarehouseProduct> warehouseProducts;
 }
