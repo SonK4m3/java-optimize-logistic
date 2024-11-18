@@ -1,3 +1,4 @@
+
 package sonnh.opt.opt_plan.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,7 +13,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    @SuppressWarnings("null")
+    Optional<User> findById(Long id);
+
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
 }

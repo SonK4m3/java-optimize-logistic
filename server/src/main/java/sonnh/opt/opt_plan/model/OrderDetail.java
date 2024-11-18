@@ -1,13 +1,16 @@
+
 package sonnh.opt.opt_plan.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "order_details")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderDetail {
@@ -17,6 +20,7 @@ public class OrderDetail {
 
 	private Integer quantity;
 	private Double price;
+	private Double weight;
 
 	@ManyToOne
 	@JoinColumn(name = "order_id")

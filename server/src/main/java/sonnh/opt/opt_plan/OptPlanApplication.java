@@ -9,9 +9,13 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication
 @EnableCaching
 @EnableAsync
-@ComponentScan(basePackages = { "sonnh.opt.opt_plan.controller", "sonnh.opt.opt_plan.service",
-		"sonnh.opt.opt_plan.model", "sonnh.opt.opt_plan.repository", "sonnh.opt.opt_plan.config", "sonnh.opt.opt_plan.util",
-		"domain.solver" })
+@ComponentScan(basePackages = {
+		"sonnh.opt.opt_plan.controller", "sonnh.opt.opt_plan.service",
+		"sonnh.opt.opt_plan.model", "sonnh.opt.opt_plan.repository",
+		"sonnh.opt.opt_plan.config", "sonnh.opt.opt_plan.exception",
+		"sonnh.opt.opt_plan.payload", "sonnh.opt.opt_plan.utils",
+		"sonnh.opt.opt_plan.constant", "domain.solver"
+})
 public class OptPlanApplication {
 
 	public static void main(String[] args) {

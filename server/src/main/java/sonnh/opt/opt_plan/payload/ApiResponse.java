@@ -1,3 +1,4 @@
+
 package sonnh.opt.opt_plan.payload;
 
 import lombok.AllArgsConstructor;
@@ -13,14 +14,14 @@ public class ApiResponse<T> {
 	private T data;
 
 	public static <T> ApiResponse<T> success(T data) {
-		return new ApiResponse<>(true, "Operation successful", data);
+		return new ApiResponse<>(true, "Successful", data);
 	}
 
 	public static <T> ApiResponse<T> success(String message, T data) {
 		return new ApiResponse<>(true, message, data);
 	}
 
-	public static <T> ApiResponse<T> error(String message) {
+	public static ApiResponse<Void> error(String message) {
 		return new ApiResponse<>(false, message, null);
 	}
 }

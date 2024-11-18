@@ -2,6 +2,11 @@ package domain;
 
 import java.util.Objects;
 
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
 public class Depot {
     private final long id;
     private final Location location;
@@ -24,8 +29,10 @@ public class Depot {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Depot)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Depot))
+            return false;
         Depot depot = (Depot) o;
         return id == depot.id && Objects.equals(location, depot.location);
     }

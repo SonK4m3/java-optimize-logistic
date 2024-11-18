@@ -1,3 +1,4 @@
+
 package sonnh.opt.opt_plan.config;
 
 import org.springframework.context.annotation.Bean;
@@ -8,7 +9,5 @@ import domain.solver.VRPSolver;
 public class VRPConfig {
 
     @Bean
-    public VRPSolver vrpSolver() {
-        return new VRPSolver(100);
-    }
+    public VRPSolver vrpSolver() { return new VRPSolver(100); }
 }

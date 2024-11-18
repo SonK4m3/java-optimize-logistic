@@ -23,14 +23,17 @@ public class UserController {
 	@PostMapping
 	public ResponseEntity<ApiResponse<User>> createUser(@Valid @RequestBody User user) {
 		User createdUser = userService.createUser(user);
-		return ResponseEntity.ok(ApiResponse.success("User created successfully", createdUser));
+		return ResponseEntity
+				.ok(ApiResponse.success("User created successfully", createdUser));
 	}
 
 	@Operation(summary = "Update an existing user")
 	@PutMapping("/{id}")
-	public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
+	public ResponseEntity<ApiResponse<User>> updateUser(@PathVariable Long id,
+			@Valid @RequestBody User user) {
 		User updatedUser = userService.updateUser(id, user);
-		return ResponseEntity.ok(ApiResponse.success("User updated successfully", updatedUser));
+		return ResponseEntity
+				.ok(ApiResponse.success("User updated successfully", updatedUser));
 	}
 
 	@Operation(summary = "Get user by ID")

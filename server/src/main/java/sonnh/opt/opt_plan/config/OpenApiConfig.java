@@ -11,15 +11,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
+    private static final String BEARER_FORMAT = "JWT";
+    private static final String SCHEME = "Bearer";
+    private static final String SECURITY_SCHEME_NAME = "Security Scheme";
+
     @Bean
     public OpenAPI customOpenAPI() {
-        return new OpenAPI().info(new Info().title("Core Logic for Planning Optimal Problems").version("1.0.0"))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
-                .components(new Components().addSecuritySchemes("Bearer Authentication", createSecurityScheme()));
-    }
-
-    private SecurityScheme createSecurityScheme() {
-        return new SecurityScheme().name("Bearer Authentication").type(SecurityScheme.Type.HTTP).scheme("bearer")
-                .bearerFormat("JWT");
+        return new OpenAPI()
+                .info(new Info().title("Core Logic for Planning Optimal Problems")
+                        .description("API documentation for optimization planning system")
+                        .version("1.0.0"))
+                .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+                .components(new Components().addSecuritySchemes(SECURITY_SCHEME_NAME,
+                        new SecurityScheme().name(SECURITY_SCHEME_NAME)
+                                .type(SecurityScheme.Type.HTTP).scheme(SCHEME)
+                                .bearerFormat(BEARER_FORMAT)));
     }
 }

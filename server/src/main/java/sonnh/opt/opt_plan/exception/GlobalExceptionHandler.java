@@ -1,3 +1,4 @@
+
 package sonnh.opt.opt_plan.exception;
 
 import org.springframework.http.HttpStatus;
@@ -15,13 +16,17 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
 	@ExceptionHandler(ResourceNotFoundException.class)
-	public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
-		return new ResponseEntity<>(ApiResponse.error(ex.getMessage()), HttpStatus.NOT_FOUND);
+	public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(
+			ResourceNotFoundException ex) {
+		return new ResponseEntity<>(ApiResponse.error(ex.getMessage()),
+				HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-		return new ResponseEntity<>(ApiResponse.error(ex.getMessage()), HttpStatus.BAD_REQUEST);
+	public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(
+			IllegalArgumentException ex) {
+		return new ResponseEntity<>(ApiResponse.error(ex.getMessage()),
+				HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
@@ -33,12 +38,14 @@ public class GlobalExceptionHandler {
 			String errorMessage = error.getDefaultMessage();
 			errors.put(fieldName, errorMessage);
 		});
-		return new ResponseEntity<>(new ApiResponse<>(false, "Validation failed", errors), HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(new ApiResponse<>(false, "Validation failed", errors),
+				HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex) {
-		return new ResponseEntity<>(ApiResponse.error("An unexpected error occurred"),
+	public ResponseEntity<ApiResponse<Void>> handleGlobalException(Exception ex) {
+		return new ResponseEntity<>(
+				ApiResponse.error("An unexpected error occurred: " + ex.getMessage()),
 				HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

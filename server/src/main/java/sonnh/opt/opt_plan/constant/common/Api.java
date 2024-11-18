@@ -3,6 +3,7 @@ package sonnh.opt.opt_plan.constant.common;
 public class Api {
 	public static final String API_VERSION = "v1";
 	public static final String API_BASE_URL = "/api/" + API_VERSION;
+	public static final String HOME_ROUTE = API_BASE_URL + "/";
 	public static final String USER_ROUTE = API_BASE_URL + "/users";
 	public static final String AUTH_ROUTE = API_BASE_URL + "/auth";
 	public static final String ORDER_ROUTE = API_BASE_URL + "/orders";
@@ -13,6 +14,9 @@ public class Api {
 	public static final String DELIVERY_ROUTE = API_BASE_URL + "/deliveries";
 	public static final String ADMIN_ROUTE = API_BASE_URL + "/admin";
 	public static final String MANAGER_ROUTE = API_BASE_URL + "/manager";
+	public static final String VRP_ROUTE = API_BASE_URL + "/vrp";
+	public static final String WAREHOUSE_ROUTE = API_BASE_URL + "/warehouses";
+	public static final String INVENTORY_ROUTE = API_BASE_URL + "/inventories";
 	public static final String SUCCESS = "Operation successful";
 	public static final String ERROR = "Operation failed";
 	public static final String RESOURCE_NOT_FOUND = "Resource not found";

@@ -1,3 +1,4 @@
+
 package sonnh.opt.opt_plan.config.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +23,8 @@ public class UnauthorizedHandler implements AuthenticationEntryPoint {
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-		ApiResponse<Object> apiResponse = ApiResponse.error("Unauthorized access: " + authException.getMessage());
+		ApiResponse<Void> apiResponse = ApiResponse
+				.error("Unauthorized access: " + authException.getMessage());
 
 		objectMapper.writeValue(response.getOutputStream(), apiResponse);
 	}

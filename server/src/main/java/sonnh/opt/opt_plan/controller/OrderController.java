@@ -3,18 +3,20 @@ package sonnh.opt.opt_plan.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sonnh.opt.opt_plan.constant.enums.OrderStatus;
-import sonnh.opt.opt_plan.model.Order;
 import sonnh.opt.opt_plan.payload.ApiResponse;
+import sonnh.opt.opt_plan.payload.dto.DeliveryDTO;
+import sonnh.opt.opt_plan.payload.dto.OrderDTO;
+import sonnh.opt.opt_plan.payload.request.OrderCreateRequest;
+import sonnh.opt.opt_plan.payload.request.PageParams;
+import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.service.OrderService;
 import sonnh.opt.opt_plan.constant.common.Api;
-
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping(Api.ORDER_ROUTE)
@@ -25,53 +27,72 @@ public class OrderController {
 
 	@Operation(summary = "Create a new order")
 	@PostMapping
-	public ResponseEntity<ApiResponse<Order>> createOrder(@Valid @RequestBody Order order) {
-		Order createdOrder = orderService.createOrder(order);
-		return ResponseEntity.ok(ApiResponse.success("Order created successfully", createdOrder));
-	}
-
-	@Operation(summary = "Update order status")
-	@PatchMapping("/{id}/status")
-	public ResponseEntity<ApiResponse<Order>> updateOrderStatus(@PathVariable Long id,
-			@RequestParam OrderStatus status) {
-		Order updatedOrder = orderService.updateOrderStatus(id, status);
-		return ResponseEntity.ok(ApiResponse.success("Order status updated successfully", updatedOrder));
-	}
-
-	@Operation(summary = "Get order by ID")
-	@GetMapping("/{id}")
-	public ResponseEntity<ApiResponse<Order>> getOrderById(@PathVariable Long id) {
-		Order order = orderService.getOrderById(id);
-		return ResponseEntity.ok(ApiResponse.success(order));
-	}
-
-	@Operation(summary = "Get orders by status")
-	@GetMapping("/status/{status}")
-	public ResponseEntity<ApiResponse<List<Order>>> getOrdersByStatus(@PathVariable OrderStatus status) {
-		List<Order> orders = orderService.getOrdersByStatus(status);
-		return ResponseEntity.ok(ApiResponse.success(orders));
-	}
-
-	@Operation(summary = "Get orders by date range")
-	@GetMapping("/date-range")
-	public ResponseEntity<ApiResponse<List<Order>>> getOrdersByDateRange(
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-		List<Order> orders = orderService.getOrdersByDateRange(startDate, endDate);
-		return ResponseEntity.ok(ApiResponse.success(orders));
+	public ResponseEntity<ApiResponse<OrderDTO>> createOrder(
+			@Valid @RequestBody OrderCreateRequest orderRequest) {
+		OrderDTO createdOrder = orderService.createOrder(orderRequest);
+		return ResponseEntity
+				.ok(ApiResponse.success("Order created successfully", createdOrder));
 	}
 
 	@Operation(summary = "Get orders by user")
-	@GetMapping("/user/{userId}")
-	public ResponseEntity<ApiResponse<List<Order>>> getOrdersByUser(@PathVariable Long userId) {
-		List<Order> orders = orderService.getOrdersByUser(userId);
+	@GetMapping("/user")
+	public ResponseEntity<ApiResponse<PageResponse<OrderDTO>>> getOrdersByUser(
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int limit,
+			@RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String sortDir) {
+
+		PageParams pageParams = new PageParams();
+		pageParams.setPage(page);
+		pageParams.setLimit(limit);
+		pageParams.setSortBy(sortBy);
+		pageParams.setSortDir(sortDir);
+
+		PageResponse<OrderDTO> orders = orderService.getOrdersByUser(pageParams);
 		return ResponseEntity.ok(ApiResponse.success(orders));
 	}
 
-	@Operation(summary = "Delete an order")
-	@DeleteMapping("/{id}")
-	public ResponseEntity<ApiResponse<Void>> deleteOrder(@PathVariable Long id) {
-		orderService.deleteOrder(id);
-		return ResponseEntity.ok(ApiResponse.success("Order deleted successfully", null));
+	@Operation(summary = "Get order by id")
+	@GetMapping
+	public ResponseEntity<ApiResponse<List<OrderDTO>>> getAllOrders() {
+		List<OrderDTO> orders = orderService.getAllOrders();
+		return ResponseEntity.ok(ApiResponse.success(orders));
+	}
+
+	@Operation(summary = "Get order by warehouse")
+	@GetMapping("/warehouse/{warehouseId}")
+	public ResponseEntity<ApiResponse<List<OrderDTO>>> getOrderByWarehouse(
+			@PathVariable Long warehouseId) {
+		List<OrderDTO> orders = orderService.getOrdersByWarehouse(warehouseId);
+		return ResponseEntity.ok(ApiResponse.success(orders));
+	}
+
+	@Operation(summary = "Accept order for delivery")
+	@PostMapping("/{driverId}/accept-order/{orderId}")
+	public ResponseEntity<ApiResponse<DeliveryDTO>> acceptOrderForDelivery(
+			@PathVariable Long driverId, @PathVariable Long orderId) {
+
+		// Assign order to driver and create delivery
+		DeliveryDTO delivery = orderService.acceptOrderForDelivery(driverId, orderId);
+
+		return ResponseEntity
+				.ok(ApiResponse.success("Order accepted for delivery", delivery));
+	}
+
+	@Operation(summary = "Deny order for delivery")
+	@PostMapping("/{driverId}/reject-order/{orderId}")
+	public ResponseEntity<ApiResponse<DeliveryDTO>> denyOrderForDelivery(
+			@PathVariable Long driverId, @PathVariable Long orderId) {
+		DeliveryDTO delivery = orderService.denyOrderForDelivery(driverId, orderId);
+		return ResponseEntity
+				.ok(ApiResponse.success("Order denied for delivery", delivery));
+	}
+
+	@Operation(summary = "Get orders by sender id")
+	@GetMapping("/sender/{senderId}")
+	public ResponseEntity<ApiResponse<List<OrderDTO>>> getOrdersBySenderId(
+			@PathVariable Long senderId) {
+		List<OrderDTO> orders = orderService.getOrdersBySenderId(senderId);
+		return ResponseEntity.ok(ApiResponse.success(orders));
 	}
 }

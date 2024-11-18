@@ -1,28 +1,31 @@
 package sonnh.opt.opt_plan.service;
 
-import sonnh.opt.opt_plan.constant.enums.OrderStatus;
-import sonnh.opt.opt_plan.model.Order;
-import java.time.LocalDateTime;
+import sonnh.opt.opt_plan.payload.dto.DeliveryDTO;
+import sonnh.opt.opt_plan.payload.dto.OrderDTO;
+import sonnh.opt.opt_plan.payload.request.OrderCreateRequest;
+import sonnh.opt.opt_plan.payload.request.PageParams;
+import sonnh.opt.opt_plan.payload.response.PageResponse;
+
 import java.util.List;
 
 public interface OrderService {
-	Order createOrder(Order order);
+	OrderDTO createOrder(OrderCreateRequest orderRequest);
 
-	Order updateOrder(Long id, Order order);
+	List<OrderDTO> getAllOrders();
 
-	Order getOrderById(Long id);
+	List<OrderDTO> getOrdersByWarehouse(Long warehouseId);
 
-	Order getOrderByCode(String orderCode);
+	DeliveryDTO acceptOrderForDelivery(Long driverId, Long orderId);
 
-	List<Order> getAllOrders();
+	DeliveryDTO denyOrderForDelivery(Long driverId, Long orderId);
 
-	List<Order> getOrdersByStatus(OrderStatus status);
+	List<DeliveryDTO> inTransitDelivery(Long driverId);
 
-	List<Order> getOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+	DeliveryDTO completeDelivery(Long driverId, Long deliveryId);
 
-	List<Order> getOrdersByUser(Long userId);
+	DeliveryDTO cancelDelivery(Long driverId, Long deliveryId);
 
-	void deleteOrder(Long id);
+	PageResponse<OrderDTO> getOrdersByUser(PageParams pageParams);
 
-	Order updateOrderStatus(Long id, OrderStatus status);
+	List<OrderDTO> getOrdersBySenderId(Long senderId);
 }

@@ -2,13 +2,21 @@ package sonnh.opt.opt_plan.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import sonnh.opt.opt_plan.constant.enums.VehicleStatus;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "vehicles")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Vehicle {
@@ -16,13 +24,18 @@ public class Vehicle {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private String vehicleNumber;
-	private String type;
+	private String vehicleCode;
+	private Double capacity;
+	private Double costPerKm;
+
+	private Double currentLat;
+	private Double currentLng;
+
 	@Enumerated(EnumType.STRING)
 	private VehicleStatus status;
-	private Double capacity;
 
-	@ManyToOne
-	@JoinColumn(name = "driver_id")
-	private Driver driver;
+	@OneToMany(mappedBy = "vehicle")
+	@ToString.Exclude
+	@JsonIgnore
+	private List<Route> routes = new ArrayList<>();
 }
