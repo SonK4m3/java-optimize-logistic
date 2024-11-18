@@ -15,33 +15,23 @@ public class DriverDTO {
 	private String fullName;
 	private String phone;
 	private DriverStatus status;
-	private VehicleType vehicleType;
+	private VehicleType type;
 	private String vehiclePlateNumber;
 	private LocalTime workStartTime;
 	private LocalTime workEndTime;
-	private Integer remainingWorkingMinutes;
-	private String preferredAreas;
-	private Integer completedDeliveries;
-	private Double averageRating;
 	private Double currentLatitude;
 	private Double currentLongitude;
-	private Boolean isActive;
 
 	public static DriverDTO fromEntity(Driver driver) {
 		if (driver == null)
 			return null;
 		return DriverDTO.builder().id(driver.getId()).driverCode(driver.getDriverCode())
 				.fullName(driver.getFullName()).phone(driver.getPhone())
-				.status(driver.getStatus()).vehicleType(driver.getVehicleType())
+				.status(driver.getStatus()).type(driver.getType())
 				.vehiclePlateNumber(driver.getVehiclePlateNumber())
 				.workStartTime(driver.getWorkStartTime())
 				.workEndTime(driver.getWorkEndTime())
-				.remainingWorkingMinutes(driver.getRemainingWorkingMinutes())
-				.preferredAreas(driver.getPreferredAreas())
-				.completedDeliveries(driver.getCompletedDeliveries())
-				.averageRating(driver.getAverageRating())
 				.currentLatitude(driver.getCurrentLatitude())
-				.currentLongitude(driver.getCurrentLongitude())
-				.isActive(driver.getIsActive()).build();
+				.currentLongitude(driver.getCurrentLongitude()).build();
 	}
 }

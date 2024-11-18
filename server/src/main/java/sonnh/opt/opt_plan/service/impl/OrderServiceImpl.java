@@ -212,10 +212,7 @@ public class OrderServiceImpl implements OrderService {
 		delivery.setDeliveryDate(LocalDateTime.now());
 		delivery.getOrder().setStatus(OrderStatus.DELIVERED);
 
-		if (driver.getDeliveries().stream()
-				.filter(d -> d.getStatus() == DeliveryStatus.IN_TRANSIT).count() == 0) {
-			driver.setStatus(DriverStatus.AVAILABLE);
-		}
+		driver.setStatus(DriverStatus.AVAILABLE);
 
 		driverRepository.save(driver);
 		deliveryRepository.save(delivery);

@@ -8,15 +8,7 @@ import java.util.List;
 public interface DriverService {
 	DriverDTO createDriver(DriverCreateRequest request);
 
-	DriverDTO updateDriver(Long id, DriverCreateRequest request);
-
-	DriverDTO getDriverById(Long id);
-
-	DriverDTO getDriverByCode(String driverCode);
-
 	List<DriverDTO> getAllDrivers();
-
-	List<DriverDTO> getActiveDrivers();
 
 	List<DriverDTO> getDriversByStatus(DriverStatus status);
 
@@ -28,8 +20,4 @@ public interface DriverService {
 	DriverDTO updateDriverLocation(Long id, Double latitude, Double longitude);
 
 	DriverDTO updateDriverStatus(Long id, DriverStatus status);
-
-	void deleteDriver(Long id);
-
-	void updateWorkingHours(Long id);
 }

@@ -8,15 +8,11 @@ import sonnh.opt.opt_plan.constant.enums.DriverStatus;
 import sonnh.opt.opt_plan.model.Driver;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface DriverRepository extends JpaRepository<Driver, Long> {
-	Optional<Driver> findByDriverCode(String driverCode);
 
 	List<Driver> findByStatus(DriverStatus status);
-
-	List<Driver> findByIsActive(Boolean isActive);
 
 	@Query("""
 				SELECT d FROM Driver d
@@ -31,14 +27,4 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 
 	@Query("SELECT d FROM Driver d WHERE d.remainingWorkingMinutes <= :minutes AND d.status = 'BUSY'")
 	List<Driver> findDriversNearingEndOfShift(@Param("minutes") Integer minutes);
-
-	@Query("SELECT d FROM Driver d WHERE d.preferredAreas LIKE %:areaCode% AND d.status = 'AVAILABLE' AND d.isActive = true")
-	List<Driver> findAvailableDriversByPreferredArea(@Param("areaCode") String areaCode);
-
-	List<Driver> findByVehicleTypeAndStatus(String vehicleType, DriverStatus status);
-
-	@Query("SELECT d FROM Driver d WHERE d.averageRating >= :rating AND d.isActive = true")
-	List<Driver> findDriversByMinimumRating(@Param("rating") Double rating);
-
-	Long countByStatusAndIsActiveTrue(DriverStatus status);
 }
