@@ -11,6 +11,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import sonnh.opt.opt_plan.model.Customer;
+import sonnh.opt.opt_plan.model.Staff;
 import sonnh.opt.opt_plan.model.User;
 import sonnh.opt.opt_plan.payload.ApiResponse;
 import sonnh.opt.opt_plan.payload.request.LoginRequest;
@@ -19,7 +22,11 @@ import sonnh.opt.opt_plan.payload.response.JwtResponse;
 import sonnh.opt.opt_plan.repository.UserRepository;
 import sonnh.opt.opt_plan.utils.JwtUtil;
 import sonnh.opt.opt_plan.constant.common.Api;
+import sonnh.opt.opt_plan.constant.enums.Position;
+import sonnh.opt.opt_plan.constant.enums.UserRole;
 import sonnh.opt.opt_plan.exception.AuthenticationException;
+import sonnh.opt.opt_plan.service.StaffService;
+import sonnh.opt.opt_plan.service.CustomerService;
 
 @RestController
 @RequestMapping(Api.AUTH_ROUTE)
@@ -27,6 +34,8 @@ import sonnh.opt.opt_plan.exception.AuthenticationException;
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "APIs for user authentication")
 public class AuthController {
+    private final StaffService staffService;
+    private final CustomerService customerService;
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
@@ -72,24 +81,22 @@ public class AuthController {
             User user = User.builder().username(signUpRequest.getUsername())
                     .email(signUpRequest.getEmail())
                     .password(encoder.encode(signUpRequest.getPassword()))
-                    .fullName(signUpRequest.getFullName()).phone(signUpRequest.getPhone())
-                    .address(signUpRequest.getAddress()).avatar(signUpRequest.getAvatar())
-                    .bio(signUpRequest.getBio()).role(signUpRequest.getRole())
+                    .fullName(signUpRequest.getFullName()).role(signUpRequest.getRole())
                     .isActive(true).build();
 
             userRepository.save(user);
+
+            if (signUpRequest.getRole() == UserRole.STAFF) {
+                staffService.createStaff(Staff.builder().user(user).department(null)
+                        .position(Position.WORKER).build());
+            } else if (signUpRequest.getRole() == UserRole.CUSTOMER) {
+                customerService.createCustomer(Customer.builder().user(user).build());
+            }
 
             return ResponseEntity.ok(ApiResponse.success("User registered successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false,
                     "Registration failed: " + e.getMessage(), null));
         }
-    }
-
-    @Operation(summary = "Logout user", description = "Invalidates user session and clears security context")
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logoutUser() {
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
     }
 }

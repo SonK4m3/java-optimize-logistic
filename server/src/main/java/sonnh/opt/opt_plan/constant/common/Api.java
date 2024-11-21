@@ -14,8 +14,11 @@ public class Api {
 	public static final String DELIVERY_ROUTE = API_BASE_URL + "/deliveries";
 	public static final String ADMIN_ROUTE = API_BASE_URL + "/admin";
 	public static final String MANAGER_ROUTE = API_BASE_URL + "/manager";
+	public static final String STAFF_ROUTE = API_BASE_URL + "/staff";
+	public static final String CUSTOMER_ROUTE = API_BASE_URL + "/customers";
 	public static final String VRP_ROUTE = API_BASE_URL + "/vrp";
 	public static final String WAREHOUSE_ROUTE = API_BASE_URL + "/warehouses";
+	public static final String RESOURCE_ROUTE = API_BASE_URL + "/resources";
 	public static final String INVENTORY_ROUTE = API_BASE_URL + "/inventories";
 	public static final String SUCCESS = "Operation successful";
 	public static final String ERROR = "Operation failed";

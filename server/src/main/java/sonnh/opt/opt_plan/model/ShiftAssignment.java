@@ -5,8 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import sonnh.opt.opt_plan.constant.enums.ShiftStatus;
 
 import java.time.LocalDate;
@@ -23,15 +28,18 @@ public class ShiftAssignment {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "staff_id", nullable = false)
+	@ToString.Exclude
+	@JsonIgnore
 	private Staff staff;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "work_shift_id", nullable = false)
+	@ToString.Exclude
+	@JsonIgnore
 	private WorkShift workShift;
 
-	@Column(nullable = false)
 	private LocalDate workDate;
 
 	@Enumerated(EnumType.STRING)

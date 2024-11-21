@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import sonnh.opt.opt_plan.constant.enums.TaskPriority;
@@ -44,6 +45,7 @@ public class Task {
 	private TaskStatus status; // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
 
 	@OneToMany(mappedBy = "task")
+	@JsonIgnore
 	private List<TaskAssignment> assignments;
 
 	@CreationTimestamp

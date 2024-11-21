@@ -8,7 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
 import sonnh.opt.opt_plan.model.User;
 import sonnh.opt.opt_plan.model.Warehouse;
+import sonnh.opt.opt_plan.payload.dto.InventoryDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseDTO;
+import sonnh.opt.opt_plan.payload.dto.WarehouseReceiptDTO;
+import sonnh.opt.opt_plan.payload.request.InventoryUpdateRequest;
+import sonnh.opt.opt_plan.payload.request.ReceiptCreateRequest;
 import sonnh.opt.opt_plan.payload.request.WarehouseCreateRequest;
 import sonnh.opt.opt_plan.payload.request.WarehouseUpdateRequest;
 import sonnh.opt.opt_plan.repository.UserRepository;
@@ -242,5 +246,46 @@ public class WarehouseServiceImpl implements WarehouseService {
 				.currentOccupancy(warehouse.getCurrentOccupancy())
 				.isActive(warehouse.getIsActive()).createdAt(warehouse.getCreatedAt())
 				.updatedAt(warehouse.getUpdatedAt()).build();
+	}
+
+	@Override
+	public WarehouseReceiptDTO createInboundReceipt(Long warehouseId,
+			ReceiptCreateRequest request) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createInboundReceipt'");
+	}
+
+	@Override
+	public WarehouseReceiptDTO confirmInboundReceipt(Long receiptId) { // TODO
+																		// Auto-generated
+																		// method
+																		// stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'confirmInboundReceipt'");
+	}
+
+	@Override
+	public List<InventoryDTO> updateInventory(Long warehouseId,
+			List<InventoryUpdateRequest> updates) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'updateInventory'");
+	}
+
+	@Override
+	public WarehouseReceiptDTO createOutboundReceipt(Long warehouseId,
+			ReceiptCreateRequest request) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createOutboundReceipt'");
+	}
+
+	@Override
+	public WarehouseReceiptDTO confirmOutboundReceipt(Long receiptId) { // TODO
+																		// Auto-generated
+																		// method
+																		// stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'confirmOutboundReceipt'");
 	}
 }

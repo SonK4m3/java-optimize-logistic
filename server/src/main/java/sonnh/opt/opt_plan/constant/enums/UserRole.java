@@ -3,7 +3,7 @@ package sonnh.opt.opt_plan.constant.enums;
 
 public enum UserRole {
     ADMIN("ROLE_ADMIN"), MANAGER("ROLE_MANAGER"), CUSTOMER("ROLE_CUSTOMER"),
-    DRIVER("ROLE_DRIVER");
+    DRIVER("ROLE_DRIVER"), STAFF("ROLE_STAFF");
 
     private final String role;
 

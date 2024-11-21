@@ -43,4 +43,11 @@ public class Product {
 
 	@OneToMany(mappedBy = "product")
 	private List<WarehouseProduct> warehouseProducts;
+
+	@ManyToOne
+	@JoinColumn(name = "category_id")
+	private Category category;
+
+	@Column(nullable = false)
+	private Boolean isActive;
 }

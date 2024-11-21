@@ -33,6 +33,10 @@ public class WarehouseProduct {
 	@JoinColumn(name = "product_id", nullable = false)
 	private Product product;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "storage_area_id", nullable = false)
+	private StorageArea storageArea;
+
 	private Integer quantity;
 	private String location;
 	private Integer minimumStock;

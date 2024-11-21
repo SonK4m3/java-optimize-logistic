@@ -29,9 +29,6 @@ public class Inventory {
 	@Column(nullable = false)
 	private Integer quantity;
 
-	private Integer minQuantity;
-	private Integer maxQuantity;
-
 	private LocalDateTime lastUpdated;
 	private String location; // Shelf/Bin location in warehouse
 	private String status;

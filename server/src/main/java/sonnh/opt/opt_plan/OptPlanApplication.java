@@ -14,7 +14,8 @@ import org.springframework.cache.annotation.EnableCaching;
 		"sonnh.opt.opt_plan.model", "sonnh.opt.opt_plan.repository",
 		"sonnh.opt.opt_plan.config", "sonnh.opt.opt_plan.exception",
 		"sonnh.opt.opt_plan.payload", "sonnh.opt.opt_plan.utils",
-		"sonnh.opt.opt_plan.constant", "domain.solver"
+		"sonnh.opt.opt_plan.constant", "sonnh.opt.opt_plan.mapper", "domain.solver",
+		"sonnh.opt.opt_plan.security"
 })
 public class OptPlanApplication {
 
