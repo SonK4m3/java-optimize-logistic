@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import sonnh.opt.opt_plan.payload.ApiResponse;
 import sonnh.opt.opt_plan.payload.dto.ProductDTO;
 import sonnh.opt.opt_plan.payload.request.ProductCreateRequest;
+import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.service.ProductService;
 import sonnh.opt.opt_plan.constant.common.Api;
-import java.util.List;
 
 @RestController
 @RequestMapping(Api.PRODUCT_ROUTE)
@@ -38,8 +38,12 @@ public class ProductController {
 
 	@Operation(summary = "Get all products")
 	@GetMapping
-	public ResponseEntity<ApiResponse<List<ProductDTO>>> getAllProducts() {
-		List<ProductDTO> products = productService.getAllProducts();
+	public ResponseEntity<ApiResponse<PageResponse<ProductDTO>>> getAllProducts(
+			@RequestParam(required = false) String query,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int size) {
+		PageResponse<ProductDTO> products = productService.getAllProducts(query, page,
+				size);
 		return ResponseEntity.ok(ApiResponse.success(products));
 	}
 }

@@ -2,12 +2,16 @@ package sonnh.opt.opt_plan.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
 import sonnh.opt.opt_plan.model.Product;
 import sonnh.opt.opt_plan.payload.dto.ProductDTO;
 import sonnh.opt.opt_plan.payload.request.ProductCreateRequest;
+import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.repository.ProductRepository;
 import sonnh.opt.opt_plan.service.ProductService;
 
@@ -23,8 +27,15 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	@Transactional
 	public ProductDTO createProduct(ProductCreateRequest request) {
-		Product product = Product.builder().build();
-		return ProductDTO.fromEntity(productRepository.save(product));
+		Product product = Product.builder()
+				.code(ProductDTO.generateCode(request.getName())).name(request.getName())
+				.unit(request.getUnit()).price(request.getPrice())
+				.code(Product.generateCode(request.getName()))
+				.storageCondition(request.getStorageCondition()).isActive(true).build();
+
+		Product savedProduct = productRepository.save(product);
+
+		return ProductDTO.fromEntity(savedProduct);
 	}
 
 	@Override
@@ -34,9 +45,18 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public List<ProductDTO> getAllProducts() {
-		return productRepository.findAll().stream().map(ProductDTO::fromEntity)
-				.collect(Collectors.toList());
+	public PageResponse<ProductDTO> getAllProducts(String query, int page, int size) {
+		Pageable pageable = PageRequest.of(page - 1, size);
+
+		Page<Product> products = query != null && !query.trim().isEmpty()
+				? productRepository.findByNameContaining(query, pageable)
+				: productRepository.findAll(pageable);
+
+		return PageResponse.<ProductDTO> builder()
+				.docs(products.stream().map(ProductDTO::fromEntity).toList())
+				.totalDocs(products.getTotalElements()).page(page).limit(size)
+				.totalPages(products.getTotalPages()).hasNextPage(products.hasNext())
+				.hasPrevPage(products.hasPrevious()).build();
 	}
 
 	@Override

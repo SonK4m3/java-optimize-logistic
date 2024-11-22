@@ -49,7 +49,7 @@ public class Warehouse {
 	@Column(nullable = false)
 	private Integer capacity;
 
-	@Column(nullable = false)
+	@Column(nullable = true)
 	private Integer currentOccupancy;
 
 	@ManyToOne

@@ -30,6 +30,6 @@ public class Inventory {
 	private Integer quantity;
 
 	private LocalDateTime lastUpdated;
-	private String location; // Shelf/Bin location in warehouse
+	private String location;
 	private String status;
 }

@@ -11,6 +11,7 @@ import sonnh.opt.opt_plan.constant.common.Api;
 import sonnh.opt.opt_plan.payload.ApiResponse;
 import sonnh.opt.opt_plan.payload.dto.WarehouseDTO;
 import sonnh.opt.opt_plan.payload.request.WarehouseCreateRequest;
+import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.service.WarehouseService;
 import sonnh.opt.opt_plan.payload.dto.WarehouseReceiptDTO;
 import sonnh.opt.opt_plan.payload.request.ReceiptCreateRequest;
@@ -39,8 +40,11 @@ public class WarehouseController {
 
 	@Operation(summary = "Get all warehouses")
 	@GetMapping
-	public ResponseEntity<ApiResponse<List<WarehouseDTO>>> getAllWarehouses() {
-		List<WarehouseDTO> warehouses = warehouseService.getAllWarehouses();
+	public ResponseEntity<ApiResponse<PageResponse<WarehouseDTO>>> getAllWarehouses(
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int size) {
+		PageResponse<WarehouseDTO> warehouses = warehouseService.getAllWarehouses(page,
+				size);
 		return ResponseEntity.ok(ApiResponse.success(warehouses));
 	}
 
@@ -71,26 +75,36 @@ public class WarehouseController {
 		return ResponseEntity.ok(ApiResponse.success(warehouses));
 	}
 
-	@Operation(summary = "Create inbound receipt", description = "Creates a new inbound warehouse receipt")
-	@PostMapping("/{warehouseId}/receipts/inbound")
-	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> createInboundReceipt(
+	@Operation(summary = "Create receipt", description = "Creates a new receipt")
+	@PostMapping("/{warehouseId}/receipts")
+	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> createReceipt(
 			@PathVariable Long warehouseId,
 			@Valid @RequestBody ReceiptCreateRequest request) {
-		log.info("Creating inbound receipt for warehouse ID: {}", warehouseId);
-		WarehouseReceiptDTO receipt = warehouseService.createInboundReceipt(warehouseId,
+		log.info("Creating receipt for warehouse ID: {}", warehouseId);
+		WarehouseReceiptDTO receipt = warehouseService.createReceipt(warehouseId,
 				request);
 		return ResponseEntity
-				.ok(ApiResponse.success("Inbound receipt created successfully", receipt));
+				.ok(ApiResponse.success("Receipt created successfully", receipt));
 	}
 
 	@Operation(summary = "Confirm inbound receipt", description = "Confirms and processes an inbound warehouse receipt")
-	@PutMapping("/receipts/{receiptId}/confirm-inbound")
-	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> confirmInboundReceipt(
+	@PutMapping("/receipts/{receiptId}/confirm")
+	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> confirmReceipt(
 			@PathVariable Long receiptId) {
-		log.info("Confirming inbound receipt ID: {}", receiptId);
-		WarehouseReceiptDTO receipt = warehouseService.confirmInboundReceipt(receiptId);
-		return ResponseEntity.ok(
-				ApiResponse.success("Inbound receipt confirmed successfully", receipt));
+		log.info("Confirming receipt ID: {}", receiptId);
+		WarehouseReceiptDTO receipt = warehouseService.confirmReceipt(receiptId);
+		return ResponseEntity
+				.ok(ApiResponse.success("Receipt confirmed successfully", receipt));
+	}
+
+	@Operation(summary = "Reject inbound receipt", description = "Rejects and cancels an inbound warehouse receipt")
+	@PutMapping("/receipts/{receiptId}/reject")
+	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> rejectReceipt(
+			@PathVariable Long receiptId) {
+		log.info("Rejecting receipt ID: {}", receiptId);
+		WarehouseReceiptDTO receipt = warehouseService.rejectReceipt(receiptId);
+		return ResponseEntity
+				.ok(ApiResponse.success("Receipt rejected successfully", receipt));
 	}
 
 	@Operation(summary = "Update inventory", description = "Updates inventory levels for products in warehouse")
@@ -105,25 +119,16 @@ public class WarehouseController {
 				ApiResponse.success("Inventory updated successfully", updatedInventory));
 	}
 
-	@Operation(summary = "Create outbound receipt", description = "Creates a new outbound warehouse receipt")
-	@PostMapping("/{warehouseId}/receipts/outbound")
-	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> createOutboundReceipt(
-			@PathVariable Long warehouseId,
-			@Valid @RequestBody ReceiptCreateRequest request) {
-		log.info("Creating outbound receipt for warehouse ID: {}", warehouseId);
-		WarehouseReceiptDTO receipt = warehouseService.createOutboundReceipt(warehouseId,
-				request);
-		return ResponseEntity.ok(
-				ApiResponse.success("Outbound receipt created successfully", receipt));
-	}
-
-	@Operation(summary = "Confirm outbound receipt", description = "Confirms and processes an outbound warehouse receipt")
-	@PutMapping("/receipts/{receiptId}/confirm-outbound")
-	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> confirmOutboundReceipt(
-			@PathVariable Long receiptId) {
-		log.info("Confirming outbound receipt ID: {}", receiptId);
-		WarehouseReceiptDTO receipt = warehouseService.confirmOutboundReceipt(receiptId);
-		return ResponseEntity.ok(
-				ApiResponse.success("Outbound receipt confirmed successfully", receipt));
+	@Operation(summary = "Get all receipts", description = "Retrieves all warehouse receipts")
+	@GetMapping("/receipts")
+	public ResponseEntity<ApiResponse<PageResponse<WarehouseReceiptDTO>>> getAllReceipts(
+			@RequestParam(required = false) Long warehouseId,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int size) {
+		log.info("Retrieving all receipts for warehouse ID: {}", warehouseId);
+		PageResponse<WarehouseReceiptDTO> receipts = warehouseService
+				.getAllReceipts(warehouseId, page, size);
+		return ResponseEntity
+				.ok(ApiResponse.success("Receipts retrieved successfully", receipts));
 	}
 }

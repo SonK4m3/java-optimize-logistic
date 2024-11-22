@@ -1,6 +1,7 @@
 package sonnh.opt.opt_plan.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -55,6 +56,10 @@ public class WarehouseReceipt {
 	@JoinColumn(name = "created_by", nullable = false)
 	private User createdBy;
 
+	@ManyToOne
+	@JoinColumn(name = "confirmed_by", nullable = true)
+	private User confirmedBy;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private ReceiptStatus status; // DRAFT, PENDING, APPROVED, COMPLETED,
@@ -68,4 +73,15 @@ public class WarehouseReceipt {
 
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
+
+	@Column(nullable = true)
+	private LocalDateTime confirmedAt;
+
+	@Column(nullable = true)
+	private String notes;
+
+	public static String generateCode() {
+		return "RC" + LocalDateTime.now()
+				.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+	}
 }

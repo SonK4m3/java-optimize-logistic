@@ -5,28 +5,28 @@ import lombok.Data;
 import sonnh.opt.opt_plan.model.Product;
 import sonnh.opt.opt_plan.constant.enums.StorageCondition;
 
+import java.util.UUID;
+
 @Data
 @Builder
 public class ProductDTO {
 	private Long id;
 	private String code;
 	private String name;
-	private String barcode;
 	private String unit;
-	private Double length;
-	private Double width;
-	private Double height;
-	private Double weight;
+	private Double price;
 	private StorageCondition storageCondition;
 
 	public static ProductDTO fromEntity(Product product) {
 		if (product == null)
 			return null;
 		return ProductDTO.builder().id(product.getId()).code(product.getCode())
-				.name(product.getName()).barcode(product.getBarcode())
-				.unit(product.getUnit()).length(product.getLength())
-				.width(product.getWidth()).height(product.getHeight())
-				.weight(product.getWeight())
+				.name(product.getName()).unit(product.getUnit()).price(product.getPrice())
 				.storageCondition(product.getStorageCondition()).build();
+	}
+
+	public static String generateCode(String name) {
+		return name.substring(0, 3).toUpperCase() + "-"
+				+ UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 	}
 }

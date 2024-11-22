@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sonnh.opt.opt_plan.constant.enums.ReceiptType;
 
 @Data
 @Builder
@@ -19,4 +20,6 @@ public class ReceiptCreateRequest {
 	private List<ReceiptItemRequest> items;
 
 	private String notes;
+
+	private ReceiptType type;
 }

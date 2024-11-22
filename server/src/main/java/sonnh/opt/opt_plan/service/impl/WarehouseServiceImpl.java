@@ -5,21 +5,40 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import sonnh.opt.opt_plan.exception.AuthenticationException;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
 import sonnh.opt.opt_plan.model.User;
 import sonnh.opt.opt_plan.model.Warehouse;
+import sonnh.opt.opt_plan.model.WarehouseReceipt;
 import sonnh.opt.opt_plan.payload.dto.InventoryDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseReceiptDTO;
 import sonnh.opt.opt_plan.payload.request.InventoryUpdateRequest;
 import sonnh.opt.opt_plan.payload.request.ReceiptCreateRequest;
+import sonnh.opt.opt_plan.payload.request.ReceiptItemRequest;
 import sonnh.opt.opt_plan.payload.request.WarehouseCreateRequest;
 import sonnh.opt.opt_plan.payload.request.WarehouseUpdateRequest;
+import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.repository.UserRepository;
 import sonnh.opt.opt_plan.repository.WarehouseRepository;
+import sonnh.opt.opt_plan.repository.ProductRepository;
+import sonnh.opt.opt_plan.repository.InventoryRepository;
+import sonnh.opt.opt_plan.repository.WarehouseReceiptRepository;
+import sonnh.opt.opt_plan.repository.ReceiptDetailRepository;
 import sonnh.opt.opt_plan.service.WarehouseService;
+import sonnh.opt.opt_plan.utils.SecurityUtils;
+import sonnh.opt.opt_plan.model.ReceiptDetail;
+import sonnh.opt.opt_plan.model.Inventory;
+import sonnh.opt.opt_plan.model.Product;
+import sonnh.opt.opt_plan.constant.enums.ReceiptType;
+import sonnh.opt.opt_plan.constant.enums.ReceiptStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,6 +49,11 @@ import java.util.stream.Collectors;
 public class WarehouseServiceImpl implements WarehouseService {
 	private final WarehouseRepository warehouseRepository;
 	private final UserRepository userRepository;
+	private final ProductRepository productRepository;
+	private final InventoryRepository inventoryRepository;
+	private final WarehouseReceiptRepository warehouseReceiptRepository;
+	private final ReceiptDetailRepository receiptDetailRepository;
+	private final SecurityUtils securityUtils;
 
 	@Override
 	@Transactional
@@ -40,8 +64,9 @@ public class WarehouseServiceImpl implements WarehouseService {
 				.name(request.getName()).address(request.getAddress())
 				.phone(request.getPhone()).email(request.getEmail())
 				.area(request.getArea()).latitude(request.getLatitude())
-				.longitude(request.getLongitude()).capacity(request.getTotalCapacity())
-				.currentOccupancy(0).isActive(true).build();
+				.type(request.getType()).longitude(request.getLongitude())
+				.capacity(request.getTotalCapacity()).currentOccupancy(0).isActive(true)
+				.build();
 
 		warehouse = warehouseRepository.save(warehouse);
 		log.info("Successfully created warehouse with ID: {}", warehouse.getId());
@@ -77,9 +102,14 @@ public class WarehouseServiceImpl implements WarehouseService {
 	}
 
 	@Override
-	public List<WarehouseDTO> getAllWarehouses() {
-		return warehouseRepository.findAll().stream().map(this::convertToDTO)
-				.collect(Collectors.toList());
+	public PageResponse<WarehouseDTO> getAllWarehouses(int page, int size) {
+		Pageable pageable = PageRequest.of(page - 1, size);
+		Page<Warehouse> warehouses = warehouseRepository.findAll(pageable);
+		return PageResponse.<WarehouseDTO> builder()
+				.docs(warehouses.stream().map(this::convertToDTO).toList())
+				.totalDocs(warehouses.getTotalElements()).limit(size).page(page)
+				.totalPages(warehouses.getTotalPages()).hasNextPage(warehouses.hasNext())
+				.hasPrevPage(warehouses.hasPrevious()).build();
 	}
 
 	@Override
@@ -249,43 +279,132 @@ public class WarehouseServiceImpl implements WarehouseService {
 	}
 
 	@Override
-	public WarehouseReceiptDTO createInboundReceipt(Long warehouseId,
+	@Transactional
+	public WarehouseReceiptDTO createReceipt(Long warehouseId,
 			ReceiptCreateRequest request) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'createInboundReceipt'");
+		log.info("Creating inbound receipt for warehouse ID: {}", warehouseId);
+
+		// Validate user authentication
+		User currentUser = securityUtils.getCurrentUser()
+				.orElseThrow(() -> new AuthenticationException("User not authenticated"));
+
+		// Get warehouse
+		Warehouse warehouse = getWarehouseOrThrow(warehouseId);
+
+		// Create warehouse receipt
+		final WarehouseReceipt warehouseReceipt = createWarehouseReceipt(warehouse,
+				currentUser, request);
+
+		// Create and save receipt details
+		List<ReceiptDetail> savedReceiptDetails = createAndSaveReceiptDetails(request,
+				warehouseReceipt);
+
+		// Update warehouse receipt with details
+		warehouseReceipt.setReceiptDetails(savedReceiptDetails);
+		WarehouseReceipt savedReceipt = warehouseReceiptRepository.save(warehouseReceipt);
+
+		log.info("Successfully created inbound receipt with ID: {}",
+				savedReceipt.getId());
+		return WarehouseReceiptDTO.fromEntity(savedReceipt);
+	}
+
+	private WarehouseReceipt createWarehouseReceipt(Warehouse warehouse, User user,
+			ReceiptCreateRequest request) {
+		WarehouseReceipt receipt = WarehouseReceipt.builder().warehouse(warehouse)
+				.code(WarehouseReceipt.generateCode()).type(request.getType())
+				.receiptDate(LocalDateTime.now()).status(ReceiptStatus.DRAFT)
+				.receiptDetails(new ArrayList<>()).createdBy(user).confirmedBy(null)
+				.confirmedAt(null).notes(request.getNotes())
+				.createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+		return warehouseReceiptRepository.save(receipt);
+	}
+
+	private List<ReceiptDetail> createAndSaveReceiptDetails(ReceiptCreateRequest request,
+			WarehouseReceipt receipt) {
+		List<ReceiptDetail> receiptDetails = request.getItems().stream()
+				.map(itemRequest -> {
+					Product product = productRepository
+							.findById(itemRequest.getProductId())
+							.orElseThrow(() -> new ResourceNotFoundException(
+									"Product not found with id: "
+											+ itemRequest.getProductId()));
+
+					ReceiptDetail detail = ReceiptDetail.builder().product(product)
+							.quantity(itemRequest.getQuantity())
+							.note(itemRequest.getNote()).warehouseReceipt(receipt)
+							.build();
+
+					return detail;
+				}).collect(Collectors.toList());
+
+		return receiptDetailRepository.saveAll(receiptDetails);
 	}
 
 	@Override
-	public WarehouseReceiptDTO confirmInboundReceipt(Long receiptId) { // TODO
-																		// Auto-generated
-																		// method
-																		// stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'confirmInboundReceipt'");
+	public WarehouseReceiptDTO confirmReceipt(Long receiptId) {
+		User currentUser = securityUtils.getCurrentUser()
+				.orElseThrow(() -> new AuthenticationException("User not authenticated"));
+
+		WarehouseReceipt warehouseReceipt = warehouseReceiptRepository.findById(receiptId)
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Warehouse receipt not found with id: " + receiptId));
+		warehouseReceipt.setStatus(ReceiptStatus.APPROVED);
+		warehouseReceipt.setConfirmedBy(currentUser);
+		warehouseReceipt.setConfirmedAt(LocalDateTime.now());
+		warehouseReceipt.setUpdatedAt(LocalDateTime.now());
+		warehouseReceipt = warehouseReceiptRepository.save(warehouseReceipt);
+		return WarehouseReceiptDTO.fromEntity(warehouseReceipt);
 	}
 
 	@Override
 	public List<InventoryDTO> updateInventory(Long warehouseId,
 			List<InventoryUpdateRequest> updates) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'updateInventory'");
+		Warehouse warehouse = getWarehouseOrThrow(warehouseId);
+		List<InventoryDTO> updatedInventories = new ArrayList<>();
+
+		for (InventoryUpdateRequest update : updates) {
+			Inventory inventory = inventoryRepository
+					.findByWarehouseAndProduct(warehouse, update.getProductId())
+					.orElseThrow(() -> new ResourceNotFoundException(
+							"Inventory not found for product id: "
+									+ update.getProductId()));
+			inventory.setQuantity(update.getQuantity());
+			inventory.setLastUpdated(LocalDateTime.now());
+			inventoryRepository.save(inventory);
+			updatedInventories.add(InventoryDTO.fromEntity(inventory));
+		}
+
+		return updatedInventories;
 	}
 
 	@Override
-	public WarehouseReceiptDTO createOutboundReceipt(Long warehouseId,
-			ReceiptCreateRequest request) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'createOutboundReceipt'");
+	public PageResponse<WarehouseReceiptDTO> getAllReceipts(Long warehouseId, int page,
+			int size) {
+		Pageable pageable = PageRequest.of(page - 1, size);
+		Page<WarehouseReceipt> receipts;
+		if (warehouseId != null) {
+			receipts = warehouseReceiptRepository.findByWarehouseIdAndType(warehouseId,
+					ReceiptType.INBOUND, pageable);
+		} else {
+			receipts = warehouseReceiptRepository.findAll(pageable);
+		}
+		return PageResponse.<WarehouseReceiptDTO> builder()
+				.docs(receipts.stream().map(WarehouseReceiptDTO::fromEntity).toList())
+				.totalDocs(receipts.getTotalElements()).limit(size).page(page)
+				.totalPages(receipts.getTotalPages()).hasNextPage(receipts.hasNext())
+				.hasPrevPage(receipts.hasPrevious()).build();
 	}
 
 	@Override
-	public WarehouseReceiptDTO confirmOutboundReceipt(Long receiptId) { // TODO
-																		// Auto-generated
-																		// method
-																		// stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'confirmOutboundReceipt'");
+	public WarehouseReceiptDTO rejectReceipt(Long receiptId) {
+		WarehouseReceipt warehouseReceipt = warehouseReceiptRepository.findById(receiptId)
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Warehouse receipt not found with id: " + receiptId));
+		warehouseReceipt.setStatus(ReceiptStatus.CANCELLED);
+		warehouseReceipt.setUpdatedAt(LocalDateTime.now());
+		warehouseReceipt.setConfirmedBy(null);
+		warehouseReceipt.setConfirmedAt(null);
+		warehouseReceipt = warehouseReceiptRepository.save(warehouseReceipt);
+		return WarehouseReceiptDTO.fromEntity(warehouseReceipt);
 	}
 }

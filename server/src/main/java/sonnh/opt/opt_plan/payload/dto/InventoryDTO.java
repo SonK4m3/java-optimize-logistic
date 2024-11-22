@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import sonnh.opt.opt_plan.model.Inventory;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,4 +22,14 @@ public class InventoryDTO {
 	private Integer quantity;
 	private String unit;
 	private LocalDateTime lastUpdated;
+
+	public static InventoryDTO fromEntity(Inventory inventory) {
+		return InventoryDTO.builder().id(inventory.getId())
+				.productId(inventory.getProduct().getId())
+				.productCode(inventory.getProduct().getCode())
+				.productName(inventory.getProduct().getName())
+				.warehouseId(inventory.getWarehouse().getId())
+				.quantity(inventory.getQuantity()).unit(inventory.getProduct().getUnit())
+				.lastUpdated(inventory.getLastUpdated()).build();
+	}
 }

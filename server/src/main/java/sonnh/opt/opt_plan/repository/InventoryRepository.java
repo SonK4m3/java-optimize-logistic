@@ -16,8 +16,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
 	List<Inventory> findByProduct(Product product);
 
-	Optional<Inventory> findByWarehouseAndProduct(Warehouse warehouse, Product product);
-
-	@Query("SELECT i FROM Inventory i WHERE i.warehouse = :warehouse AND i.quantity < i.minQuantity")
-	List<Inventory> findLowStockByWarehouse(Warehouse warehouse);
+	@Query("SELECT i FROM Inventory i WHERE i.warehouse = :warehouse AND i.product.id = :productId")
+	Optional<Inventory> findByWarehouseAndProduct(Warehouse warehouse, Long productId);
 }
