@@ -4,10 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-import org.apache.el.stream.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import sonnh.opt.opt_plan.model.User;
 import sonnh.opt.opt_plan.model.Customer;
 import sonnh.opt.opt_plan.model.Staff;
 import sonnh.opt.opt_plan.payload.ApiResponse;
@@ -31,7 +29,6 @@ import sonnh.opt.opt_plan.payload.request.CustomerUpdateRequest;
 @RequiredArgsConstructor
 @Tag(name = "Resource Management", description = "APIs for managing resources")
 public class ResourceController {
-	private final UserService userService;
 	private final StaffService staffService;
 	private final CustomerService customerService;
 

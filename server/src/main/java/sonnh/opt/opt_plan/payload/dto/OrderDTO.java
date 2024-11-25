@@ -18,7 +18,6 @@ import java.util.List;
 public class OrderDTO {
 	private Long id;
 	private String orderCode;
-	private LocalDateTime orderDate;
 	private OrderStatus status;
 	private OrderPriority priority;
 	private CargoType cargoType;
@@ -30,8 +29,7 @@ public class OrderDTO {
 	private Double totalPrice;
 	private String receiverName;
 	private String receiverPhone;
-	private String receiverAddress;
-	private Location receiverLocation;
+	private LocationDTO receiverLocation;
 	private WarehouseDTO pickupWarehouse;
 	private PickupTimeType pickupTime;
 	private List<OrderProductDTO> orderProducts;
@@ -44,15 +42,13 @@ public class OrderDTO {
 			return null;
 
 		return OrderDTO.builder().id(order.getId()).orderCode(order.getOrderCode())
-				.orderDate(order.getOrderDate()).status(order.getStatus())
-				.priority(order.getPriority()).cargoType(order.getCargoType())
-				.payer(order.getPayer()).serviceType(order.getServiceType())
+				.status(order.getStatus()).priority(order.getPriority())
+				.cargoType(order.getCargoType()).payer(order.getPayer())
+				.serviceType(order.getServiceType())
 				.sender(UserDTO.fromEntity(order.getSender())).weight(order.getWeight())
 				.totalPrice(order.getTotalPrice()).receiverName(order.getReceiverName())
 				.receiverPhone(order.getReceiverPhone())
-				.receiverAddress(order.getReceiverAddress())
-				.receiverLocation(Location.builder().latitude(order.getReceiverLatitude())
-						.longitude(order.getReceiverLongitude()).build())
+				.receiverLocation(LocationDTO.fromEntity(order.getReceiverLocation()))
 				.pickupWarehouse(WarehouseDTO.fromEntity(order.getPickupWarehouse()))
 				.pickupTime(order.getPickupTime())
 				.orderProducts(

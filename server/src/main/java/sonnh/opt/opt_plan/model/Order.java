@@ -1,22 +1,26 @@
 package sonnh.opt.opt_plan.model;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.ArrayList;
-import sonnh.opt.opt_plan.constant.enums.OrderStatus;
-import sonnh.opt.opt_plan.constant.enums.OrderPriority;
+
 import sonnh.opt.opt_plan.constant.enums.CargoType;
+import sonnh.opt.opt_plan.constant.enums.OrderPriority;
+import sonnh.opt.opt_plan.constant.enums.OrderStatus;
 import sonnh.opt.opt_plan.constant.enums.PayerType;
 import sonnh.opt.opt_plan.constant.enums.PickupTimeType;
 import sonnh.opt.opt_plan.constant.enums.ServiceType;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "orders", indexes = {
@@ -36,9 +40,6 @@ public class Order {
 
 	@Column(nullable = false)
 	private String orderCode;
-
-	@Column(nullable = false)
-	private LocalDateTime orderDate;
 
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
@@ -63,12 +64,13 @@ public class Order {
 	// Physical characteristics
 	private Double weight;
 	private Double totalPrice;
+
 	// Receiver information
 	private String receiverName;
 	private String receiverPhone;
-	private String receiverAddress;
-	private double receiverLatitude;
-	private double receiverLongitude;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "receiver_location_id")
+	private Location receiverLocation;
 
 	// Pickup details
 	@JsonBackReference
@@ -104,4 +106,9 @@ public class Order {
 
 	@PrePersist
 	protected void onCreate() { createdAt = LocalDateTime.now(); }
+
+	public static String generateOrderCode() {
+		return "OD" + LocalDateTime.now()
+				.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+	}
 }

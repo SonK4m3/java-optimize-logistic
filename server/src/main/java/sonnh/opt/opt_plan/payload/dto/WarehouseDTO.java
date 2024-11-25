@@ -6,7 +6,6 @@ import sonnh.opt.opt_plan.constant.enums.WarehouseStatus;
 import sonnh.opt.opt_plan.constant.enums.WarehouseType;
 import sonnh.opt.opt_plan.model.Warehouse;
 
-import java.time.LocalTime;
 import java.time.LocalDateTime;
 
 @Data
@@ -15,21 +14,12 @@ public class WarehouseDTO {
 	private Long id;
 	private String code;
 	private String name;
-	private String address;
-	private String phone;
-	private String email;
-	private Double latitude;
-	private Double longitude;
-	private Integer totalCapacity;
-	private Integer currentOccupancy;
-	private Double utilizationRate;
-	private LocalTime openingTime;
-	private LocalTime closingTime;
-	private WarehouseType type;
+	private LocationDTO location;
 	private WarehouseStatus status;
-	private Boolean isActive;
-	private Integer totalProducts;
-	private Integer lowStockProducts;
+	private WarehouseType type;
+	private Double totalArea;
+	private Integer totalCapacity;
+	private StaffDTO manager;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
@@ -37,6 +27,12 @@ public class WarehouseDTO {
 		if (warehouse == null)
 			return null;
 		return WarehouseDTO.builder().id(warehouse.getId()).name(warehouse.getName())
-				.address(warehouse.getAddress()).code(warehouse.getCode()).build();
+				.location(LocationDTO.fromEntity(warehouse.getLocation()))
+				.status(warehouse.getStatus()).type(warehouse.getType())
+				.totalArea(warehouse.getTotalArea())
+				.totalCapacity(warehouse.getTotalCapacity())
+				.manager(StaffDTO.fromEntity(warehouse.getManager()))
+				.createdAt(warehouse.getCreatedAt()).updatedAt(warehouse.getUpdatedAt())
+				.build();
 	}
 }

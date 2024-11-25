@@ -23,5 +23,25 @@ public class ProductCreateRequest {
 	@Positive(message = "Price must be positive")
 	private Double price;
 
+	@Positive(message = "Weight must be positive")
+	private Double weight;
+
+	private String dimensions;
+
+	@Positive(message = "Min stock level must be positive")
+	private Integer minStockLevel;
+
+	@Positive(message = "Max stock level must be positive")
+	private Integer maxStockLevel;
+
+	@Positive(message = "Reorder point must be positive")
+	private Integer reorderPoint;
+
 	private StorageCondition storageCondition;
+
+	private String imageUrl;
+
+	private Long categoryId;
+
+	private Long supplierId;
 }

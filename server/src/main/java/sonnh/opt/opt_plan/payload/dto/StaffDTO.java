@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import sonnh.opt.opt_plan.constant.enums.Position;
 import sonnh.opt.opt_plan.model.Staff;
-import sonnh.opt.opt_plan.model.User;
 
 @Data
 @Builder
@@ -14,11 +13,7 @@ import sonnh.opt.opt_plan.model.User;
 @AllArgsConstructor
 public class StaffDTO {
 	private Long id;
-	private String code;
-	private String username;
-	private String fullName;
-	private String email;
-	private Boolean isActive;
+	private UserDTO user;
 	private Position position;
 	private DepartmentDTO department;
 
@@ -33,14 +28,8 @@ public class StaffDTO {
 			return null;
 		}
 
-		User user = staff.getUser();
-		if (user == null) {
-			return null;
-		}
-
-		return StaffDTO.builder().id(user.getId()).username(user.getUsername())
-				.fullName(user.getFullName()).email(user.getEmail())
-				.isActive(user.isActive()).position(staff.getPosition())
+		return StaffDTO.builder().id(staff.getId())
+				.user(UserDTO.fromEntity(staff.getUser())).position(staff.getPosition())
 				.department(DepartmentDTO.fromEntity(staff.getDepartment())).build();
 	}
 }

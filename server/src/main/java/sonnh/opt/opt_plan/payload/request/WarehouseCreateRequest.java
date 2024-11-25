@@ -6,13 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import sonnh.opt.opt_plan.constant.enums.WarehouseType;
-import java.time.LocalTime;
 
 @Data
 public class WarehouseCreateRequest {
-	@NotBlank(message = "Warehouse code is required")
-	private String code;
-
 	@NotBlank(message = "Warehouse name is required")
 	private String name;
 
@@ -29,24 +25,13 @@ public class WarehouseCreateRequest {
 	@Positive(message = "Total capacity must be positive")
 	private Integer totalCapacity;
 
+	@NotNull(message = "Total area is required")
+	@Positive(message = "Total area must be positive")
+	private Double totalArea;
+
 	@NotNull(message = "Warehouse type is required")
 	private WarehouseType type;
 
-	private String city;
-	private String state;
-	private String country;
-	private String postalCode;
-	private String phone;
-	private String email;
-	private String contactPerson;
-	private LocalTime openingTime;
-	private LocalTime closingTime;
-	private Boolean isOpen24Hours;
-	private String workingDays;
-	private Boolean hasLoadingDock;
-	private Boolean hasRefrigeration;
-	private Boolean hasSecuritySystem;
-	private Double temperatureMin;
-	private Double temperatureMax;
-	private Double area;
+	@NotNull(message = "Manager is required")
+	private Long managerId;
 }

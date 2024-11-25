@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import sonnh.opt.opt_plan.model.Inventory;
+import sonnh.opt.opt_plan.constant.enums.InventoryStatus;
 
 @Data
 @Builder
@@ -15,21 +16,20 @@ import sonnh.opt.opt_plan.model.Inventory;
 @AllArgsConstructor
 public class InventoryDTO {
 	private Long id;
-	private Long productId;
-	private String productCode;
-	private String productName;
-	private Long warehouseId;
+	private ProductDTO product;
+	private WarehouseDTO warehouse;
 	private Integer quantity;
-	private String unit;
-	private LocalDateTime lastUpdated;
+	private Integer minQuantity;
+	private Integer maxQuantity;
+	private String location;
+	private InventoryStatus status;
 
 	public static InventoryDTO fromEntity(Inventory inventory) {
 		return InventoryDTO.builder().id(inventory.getId())
-				.productId(inventory.getProduct().getId())
-				.productCode(inventory.getProduct().getCode())
-				.productName(inventory.getProduct().getName())
-				.warehouseId(inventory.getWarehouse().getId())
-				.quantity(inventory.getQuantity()).unit(inventory.getProduct().getUnit())
-				.lastUpdated(inventory.getLastUpdated()).build();
+				.product(ProductDTO.fromEntity(inventory.getProduct()))
+				.warehouse(WarehouseDTO.fromEntity(inventory.getWarehouse()))
+				.quantity(inventory.getQuantity()).minQuantity(inventory.getMinQuantity())
+				.maxQuantity(inventory.getMaxQuantity()).location(inventory.getLocation())
+				.status(inventory.getStatus()).build();
 	}
 }

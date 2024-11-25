@@ -1,5 +1,6 @@
 package sonnh.opt.opt_plan.payload.response;
 
+import org.springframework.data.domain.Page;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,4 +16,11 @@ public class PageResponse<T> {
 	private int totalPages;
 	private boolean hasNextPage;
 	private boolean hasPrevPage;
+
+	public static <T> PageResponse<T> of(Page<T> page) {
+		return PageResponse.<T> builder().docs(page.getContent()).page(page.getNumber())
+				.limit(page.getSize()).totalDocs(page.getTotalElements())
+				.totalPages(page.getTotalPages()).hasNextPage(page.hasNext())
+				.hasPrevPage(page.hasPrevious()).build();
+	}
 }

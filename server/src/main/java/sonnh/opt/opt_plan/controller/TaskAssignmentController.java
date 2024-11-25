@@ -6,7 +6,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import sonnh.opt.opt_plan.constant.enums.TaskStatus;
 import sonnh.opt.opt_plan.payload.request.TaskAssignmentRequest;
 import sonnh.opt.opt_plan.payload.request.TaskCreateRequest;
 import sonnh.opt.opt_plan.payload.response.PageResponse;
@@ -14,8 +13,6 @@ import sonnh.opt.opt_plan.payload.response.TaskAssignmentResponse;
 import sonnh.opt.opt_plan.service.TaskAssignmentService;
 import sonnh.opt.opt_plan.payload.dto.TaskDTO;
 import sonnh.opt.opt_plan.payload.ApiResponse;
-
-import java.time.LocalDate;
 
 import jakarta.validation.Valid;
 

@@ -12,10 +12,8 @@ import sonnh.opt.opt_plan.model.Order;
 import sonnh.opt.opt_plan.model.User;
 import sonnh.opt.opt_plan.model.Warehouse;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -24,8 +22,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	List<Order> findByStatus(OrderStatus status);
 
 	List<Order> findByPriority(OrderPriority priority);
-
-	List<Order> findByOrderDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 
 	Optional<Order> findByOrderCode(String orderCode);
 
@@ -40,25 +36,4 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 	@Query("SELECT o FROM Order o WHERE o.sender.id = :senderId")
 	List<Order> findOrdersBySenderId(@Param("senderId") Long senderId);
-
-	@Query("""
-				SELECT o FROM Order o
-				JOIN Delivery d ON d.order.id = o.id
-				WHERE d.driver.id = :driverId
-				AND o.status = 'COMPLETED'
-				AND o.lastUpdated >= :date
-				ORDER BY o.lastUpdated DESC
-			""")
-	List<Order> findCompletedOrdersByDriverAndDateAfter(@Param("driverId") Long driverId,
-			@Param("date") LocalDateTime date);
-
-	@Query("""
-				SELECT o FROM Order o
-				WHERE o.status = 'PENDING'
-				AND o.receiverAddress IN :zones
-				AND o.createdAt >= :minDate
-				ORDER BY o.priority DESC, o.createdAt ASC
-			""")
-	List<Order> findAvailableOrdersInZones(@Param("zones") Set<String> zones,
-			@Param("minDate") LocalDateTime minDate);
 }

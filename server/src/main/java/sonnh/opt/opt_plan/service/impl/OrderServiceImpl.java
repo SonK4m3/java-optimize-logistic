@@ -31,19 +31,19 @@ import org.springframework.data.domain.Sort;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class OrderServiceImpl implements OrderService {
+	private final SecurityUtils securityUtils;
 	private final OrderRepository orderRepository;
 	private final WarehouseRepository warehouseRepository;
 	private final DriverRepository driverRepository;
 	private final DeliveryRepository deliveryRepository;
 	private final OrderProductRepository orderProductRepository;
-	private final SecurityUtils securityUtils;
+	private final LocationRepository locationRepository;
 
 	@Override
 	@Transactional
@@ -61,35 +61,40 @@ public class OrderServiceImpl implements OrderService {
 				.findById(orderRequest.getPickupWarehouseId())
 				.orElseThrow(() -> new ResourceNotFoundException("Warehouse not found"));
 
-		Order order = Order.builder().orderCode(generateOrderCode()).sender(user.get())
-				.orderDate(LocalDateTime.now()).status(OrderStatus.PENDING)
-				.priority(OrderPriority.MEDIUM).weight(0.0)
-				.receiverName(orderRequest.getReceiverName())
+		Location receiverLocation = Location.builder()
+				.address(orderRequest.getReceiverAddress())
+				.latitude(orderRequest.getReceiverLatitude())
+				.longitude(orderRequest.getReceiverLongitude()).build();
+
+		receiverLocation = locationRepository.save(receiverLocation);
+
+		Order order = Order.builder().orderCode(Order.generateOrderCode())
+				.sender(user.get()).status(OrderStatus.PENDING)
+				.priority(OrderPriority.LOW).receiverName(orderRequest.getReceiverName())
 				.receiverPhone(orderRequest.getReceiverPhone())
-				.receiverAddress(orderRequest.getReceiverAddress())
-				.receiverLatitude(orderRequest.getReceiverLatitude())
-				.receiverLongitude(orderRequest.getReceiverLongitude())
-				.pickupWarehouse(pickupWarehouse).pickupTime(orderRequest.getPickupTime())
+				.receiverLocation(receiverLocation).pickupWarehouse(pickupWarehouse)
+				.pickupTime(orderRequest.getPickupTime())
 				.serviceType(orderRequest.getServiceType())
 				.cargoType(orderRequest.getCargoType()).payer(orderRequest.getPayer())
 				.lastUpdated(LocalDateTime.now()).lastUpdatedBy(user.get().getUsername())
 				.weight(orderRequest.getWeight()).totalPrice(orderRequest.getTotalPrice())
 				.build();
 
-		orderRepository.save(order);
+		order = orderRepository.save(order);
 
+		final Order finalOrder = order;
 		orderRequest.getOrderProducts().forEach(orderProduct -> {
 			OrderProduct op = OrderProduct.builder().name(orderProduct.getName())
 					.quantity(orderProduct.getQuantity())
 					.unitPrice(orderProduct.getPrice()).weight(orderProduct.getWeight())
-					.order(order).build();
-			orderProductRepository.save(op);
-			order.addOrderProduct(op);
+					.order(finalOrder).build();
+			op = orderProductRepository.save(op);
+			finalOrder.addOrderProduct(op);
 		});
 
 		Delivery delivery = Delivery.builder().status(DeliveryStatus.PENDING)
 				.deliveryNote(orderRequest.getDeliveryNote()).order(order).build();
-		deliveryRepository.save(delivery);
+		delivery = deliveryRepository.save(delivery);
 
 		return OrderDTO.fromEntity(orderRepository.save(order));
 	}
@@ -134,10 +139,6 @@ public class OrderServiceImpl implements OrderService {
 						"Not exist order with warehouse id: " + warehouseId));
 		return orderRepository.findByPickupWarehouse(warehouse).stream()
 				.map(OrderDTO::fromEntity).toList();
-	}
-
-	private String generateOrderCode() {
-		return "ORD" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 	}
 
 	@Override
@@ -194,11 +195,14 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional
 	public List<DeliveryDTO> inTransitDelivery(Long driverId) {
-		List<Delivery> deliveries = deliveryRepository.findByDriverId(driverId);
+		Optional<Delivery> delivery = deliveryRepository.findByDriverId(driverId);
+		if (delivery.isEmpty()) {
+			throw new ResourceNotFoundException("Delivery not found");
+		}
 		// Initialize lazy collections
-		Hibernate.initialize(deliveries.get(0).getOrder().getOrderProducts());
+		Hibernate.initialize(delivery.get().getOrder().getOrderProducts());
 
-		return deliveries.stream().map(DeliveryDTO::fromEntity).toList();
+		return List.of(DeliveryDTO.fromEntity(delivery.get()));
 	}
 
 	@Override

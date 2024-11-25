@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.coyote.BadRequestException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sonnh.opt.opt_plan.constant.common.Api;
@@ -17,6 +20,7 @@ import sonnh.opt.opt_plan.payload.dto.WarehouseReceiptDTO;
 import sonnh.opt.opt_plan.payload.request.ReceiptCreateRequest;
 import sonnh.opt.opt_plan.payload.request.InventoryUpdateRequest;
 import sonnh.opt.opt_plan.payload.dto.InventoryDTO;
+import sonnh.opt.opt_plan.payload.dto.WarehouseSpaceDTO;
 
 import java.util.List;
 
@@ -32,10 +36,8 @@ public class WarehouseController {
 	@PostMapping
 	public ResponseEntity<ApiResponse<WarehouseDTO>> createWarehouse(
 			@Valid @RequestBody WarehouseCreateRequest request) {
-		log.info("Creating new warehouse with code: {}", request.getCode());
 		WarehouseDTO warehouse = warehouseService.createWarehouse(request);
-		return ResponseEntity
-				.ok(ApiResponse.success("Warehouse created successfully", warehouse));
+		return ResponseEntity.ok(ApiResponse.success(warehouse));
 	}
 
 	@Operation(summary = "Get all warehouses")
@@ -48,22 +50,12 @@ public class WarehouseController {
 		return ResponseEntity.ok(ApiResponse.success(warehouses));
 	}
 
-	@Operation(summary = "Get active warehouses")
-	@GetMapping("/active")
-	public ResponseEntity<ApiResponse<List<WarehouseDTO>>> getActiveWarehouses() {
-		List<WarehouseDTO> warehouses = warehouseService.getActiveWarehouses();
-		return ResponseEntity.ok(ApiResponse.success(warehouses));
-	}
-
 	@Operation(summary = "Update warehouse manager")
 	@PatchMapping("/{id}/manager")
 	public ResponseEntity<ApiResponse<WarehouseDTO>> updateManager(@PathVariable Long id,
 			@RequestParam Long managerId) {
-		log.info("Updating manager for warehouse ID: {} to manager ID: {}", id,
-				managerId);
 		WarehouseDTO warehouse = warehouseService.updateManager(id, managerId);
-		return ResponseEntity.ok(
-				ApiResponse.success("Warehouse manager updated successfully", warehouse));
+		return ResponseEntity.ok(ApiResponse.success(warehouse));
 	}
 
 	@Operation(summary = "Get warehouses by manager")
@@ -80,31 +72,29 @@ public class WarehouseController {
 	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> createReceipt(
 			@PathVariable Long warehouseId,
 			@Valid @RequestBody ReceiptCreateRequest request) {
-		log.info("Creating receipt for warehouse ID: {}", warehouseId);
 		WarehouseReceiptDTO receipt = warehouseService.createReceipt(warehouseId,
 				request);
-		return ResponseEntity
-				.ok(ApiResponse.success("Receipt created successfully", receipt));
+		return ResponseEntity.ok(ApiResponse.success(receipt));
 	}
 
-	@Operation(summary = "Confirm inbound receipt", description = "Confirms and processes an inbound warehouse receipt")
+	@Operation(summary = "Confirm receipt", description = "Confirms and processes a warehouse receipt")
 	@PutMapping("/receipts/{receiptId}/confirm")
-	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> confirmReceipt(
-			@PathVariable Long receiptId) {
-		log.info("Confirming receipt ID: {}", receiptId);
-		WarehouseReceiptDTO receipt = warehouseService.confirmReceipt(receiptId);
-		return ResponseEntity
-				.ok(ApiResponse.success("Receipt confirmed successfully", receipt));
+	public ResponseEntity<ApiResponse<?>> confirmReceipt(@PathVariable Long receiptId) {
+		try {
+			WarehouseReceiptDTO receipt = warehouseService.confirmReceipt(receiptId);
+			return ResponseEntity.ok(ApiResponse.success(receipt));
+		} catch (BadRequestException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(ApiResponse.error(e.getMessage()));
+		}
 	}
 
-	@Operation(summary = "Reject inbound receipt", description = "Rejects and cancels an inbound warehouse receipt")
+	@Operation(summary = "Reject receipt", description = "Rejects and cancels a warehouse receipt")
 	@PutMapping("/receipts/{receiptId}/reject")
 	public ResponseEntity<ApiResponse<WarehouseReceiptDTO>> rejectReceipt(
 			@PathVariable Long receiptId) {
-		log.info("Rejecting receipt ID: {}", receiptId);
 		WarehouseReceiptDTO receipt = warehouseService.rejectReceipt(receiptId);
-		return ResponseEntity
-				.ok(ApiResponse.success("Receipt rejected successfully", receipt));
+		return ResponseEntity.ok(ApiResponse.success(receipt));
 	}
 
 	@Operation(summary = "Update inventory", description = "Updates inventory levels for products in warehouse")
@@ -112,11 +102,9 @@ public class WarehouseController {
 	public ResponseEntity<ApiResponse<List<InventoryDTO>>> updateInventory(
 			@PathVariable Long warehouseId,
 			@Valid @RequestBody List<InventoryUpdateRequest> updates) {
-		log.info("Updating inventory for warehouse ID: {}", warehouseId);
 		List<InventoryDTO> updatedInventory = warehouseService
 				.updateInventory(warehouseId, updates);
-		return ResponseEntity.ok(
-				ApiResponse.success("Inventory updated successfully", updatedInventory));
+		return ResponseEntity.ok(ApiResponse.success(updatedInventory));
 	}
 
 	@Operation(summary = "Get all receipts", description = "Retrieves all warehouse receipts")
@@ -125,10 +113,16 @@ public class WarehouseController {
 			@RequestParam(required = false) Long warehouseId,
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size) {
-		log.info("Retrieving all receipts for warehouse ID: {}", warehouseId);
 		PageResponse<WarehouseReceiptDTO> receipts = warehouseService
 				.getAllReceipts(warehouseId, page, size);
-		return ResponseEntity
-				.ok(ApiResponse.success("Receipts retrieved successfully", receipts));
+		return ResponseEntity.ok(ApiResponse.success(receipts));
+	}
+
+	@Operation(summary = "Check warehouse space", description = "Retrieves detailed information about warehouse space utilization")
+	@GetMapping("/{warehouseId}/space")
+	public ResponseEntity<ApiResponse<WarehouseSpaceDTO>> checkWarehouseSpace(
+			@PathVariable Long warehouseId) {
+		WarehouseSpaceDTO spaceInfo = warehouseService.checkWarehouseSpace(warehouseId);
+		return ResponseEntity.ok(ApiResponse.success(spaceInfo));
 	}
 }

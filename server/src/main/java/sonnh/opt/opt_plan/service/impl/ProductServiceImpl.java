@@ -9,29 +9,42 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
 import sonnh.opt.opt_plan.model.Product;
+import sonnh.opt.opt_plan.model.Category;
+import sonnh.opt.opt_plan.model.Supplier;
 import sonnh.opt.opt_plan.payload.dto.ProductDTO;
 import sonnh.opt.opt_plan.payload.request.ProductCreateRequest;
 import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.repository.ProductRepository;
+import sonnh.opt.opt_plan.repository.CategoryRepository;
+import sonnh.opt.opt_plan.repository.SupplierRepository;
 import sonnh.opt.opt_plan.service.ProductService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ProductServiceImpl implements ProductService {
 	private final ProductRepository productRepository;
+	private final CategoryRepository categoryRepository;
+	private final SupplierRepository supplierRepository;
 
 	@Override
 	@Transactional
 	public ProductDTO createProduct(ProductCreateRequest request) {
-		Product product = Product.builder()
-				.code(ProductDTO.generateCode(request.getName())).name(request.getName())
-				.unit(request.getUnit()).price(request.getPrice())
-				.code(Product.generateCode(request.getName()))
-				.storageCondition(request.getStorageCondition()).isActive(true).build();
+		Category category = categoryRepository.findById(request.getCategoryId())
+				.orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+		Supplier supplier = supplierRepository.findById(request.getSupplierId())
+				.orElseThrow(() -> new ResourceNotFoundException("Supplier not found"));
+
+		Product product = Product.builder().code(Product.generateCode(request.getName()))
+				.name(request.getName()).unit(request.getUnit()).price(request.getPrice())
+				.weight(request.getWeight()).dimensions(request.getDimensions())
+				.minStockLevel(request.getMinStockLevel())
+				.maxStockLevel(request.getMaxStockLevel())
+				.reorderPoint(request.getReorderPoint())
+				.storageCondition(request.getStorageCondition())
+				.imageUrl(request.getImageUrl()).category(category).supplier(supplier)
+				.build();
 
 		Product savedProduct = productRepository.save(product);
 
@@ -58,11 +71,4 @@ public class ProductServiceImpl implements ProductService {
 				.totalPages(products.getTotalPages()).hasNextPage(products.hasNext())
 				.hasPrevPage(products.hasPrevious()).build();
 	}
-
-	@Override
-	public List<ProductDTO> getActiveProducts() {
-		return productRepository.findByIsActiveTrue().stream().map(ProductDTO::fromEntity)
-				.collect(Collectors.toList());
-	}
-
 }

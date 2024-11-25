@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 	@Query("SELECT d FROM Delivery d WHERE d.driver.id = :driverId")
-	List<Delivery> findByDriverId(Long driverId);
+	Optional<Delivery> findByDriverId(Long driverId);
 
 	@Query("SELECT d FROM Delivery d WHERE d.order.id = :orderId")
 	Optional<Delivery> findByOrderId(Long orderId);

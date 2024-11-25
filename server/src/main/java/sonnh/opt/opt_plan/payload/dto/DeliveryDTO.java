@@ -15,12 +15,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class DeliveryDTO {
 	private Long id;
-	private DeliveryStatus status;
-	private LocalDateTime deliveryDate;
 	private OrderDTO order;
+	private DeliveryStatus status;
+	private String deliveryNote;
+	private LocalDateTime deliveryDate;
 	private DriverDTO driver;
-	private String currentLocation;
-	private String deliveryNotes;
 
 	public static DeliveryDTO fromEntity(Delivery delivery) {
 		if (delivery == null)
@@ -29,7 +28,6 @@ public class DeliveryDTO {
 				.deliveryDate(delivery.getDeliveryDate())
 				.order(OrderDTO.fromEntity(delivery.getOrder()))
 				.driver(DriverDTO.fromEntity(delivery.getDriver()))
-				.currentLocation(delivery.getOrder().getPickupWarehouse().getAddress())
-				.deliveryNotes(delivery.getDeliveryNote()).build();
+				.deliveryNote(delivery.getDeliveryNote()).build();
 	}
 }

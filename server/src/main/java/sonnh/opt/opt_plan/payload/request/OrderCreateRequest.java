@@ -13,7 +13,6 @@ public class OrderCreateRequest {
 	// Sender information
 	@NotNull
 	private Long senderId;
-
 	// Receiver information
 	@NotBlank
 	@Size(min = 2, message = "Name must be at least 2 characters")
@@ -33,12 +32,15 @@ public class OrderCreateRequest {
 	@NotNull
 	private double receiverLongitude;
 
-	// Products
-	@NotEmpty(message = "At least one product is required")
-	private List<OrderProductRequest> orderProducts;
+	@NotNull
+	private Long pickupWarehouseId;
 
 	@NotNull
 	private PickupTimeType pickupTime;
+
+	// Products
+	@NotEmpty(message = "At least one product is required")
+	private List<OrderProductRequest> orderProducts;
 
 	@NotNull
 	private ServiceType serviceType;
@@ -48,9 +50,6 @@ public class OrderCreateRequest {
 
 	@NotNull
 	private PayerType payer;
-
-	@NotNull
-	private Long pickupWarehouseId;
 
 	private String deliveryNote;
 

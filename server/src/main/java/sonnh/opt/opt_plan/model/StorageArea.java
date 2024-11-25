@@ -56,4 +56,6 @@ public class StorageArea {
 
 	@OneToMany(mappedBy = "storageArea")
 	private List<WarehouseProduct> warehouseProducts;
+
+	public double getArea() { return this.capacity * 1.0; }
 }

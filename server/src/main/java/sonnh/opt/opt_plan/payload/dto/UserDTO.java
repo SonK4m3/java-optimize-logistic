@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sonnh.opt.opt_plan.model.User;
-
+import sonnh.opt.opt_plan.constant.enums.UserRole;
 import java.time.LocalDateTime;
 
 @Data
@@ -18,6 +18,7 @@ public class UserDTO {
 	private String fullName;
 	private String email;
 	private boolean isActive;
+	private UserRole role;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
@@ -31,7 +32,7 @@ public class UserDTO {
 		if (user == null)
 			return null;
 		return UserDTO.builder().id(user.getId()).username(user.getUsername())
-				.fullName(user.getFullName()).email(user.getEmail())
+				.fullName(user.getFullName()).email(user.getEmail()).role(user.getRole())
 				.isActive(user.isActive()).createdAt(user.getCreatedAt())
 				.updatedAt(user.getUpdatedAt()).build();
 	}
