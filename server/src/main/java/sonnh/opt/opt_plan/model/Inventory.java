@@ -21,8 +21,8 @@ public class Inventory {
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "warehouse_id", nullable = false)
-	private Warehouse warehouse;
+	@JoinColumn(name = "storage_location_id", nullable = false)
+	private StorageLocation storageLocation;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_id", nullable = false)
@@ -51,6 +51,9 @@ public class Inventory {
 
 	private LocalDateTime updatedAt;
 
+	@Column(nullable = false)
+	private LocalDateTime expiryDate;
+
 	@PrePersist
 	protected void onCreate() {
 		createdAt = LocalDateTime.now();
@@ -60,4 +63,8 @@ public class Inventory {
 
 	@PreUpdate
 	protected void onUpdate() { updatedAt = LocalDateTime.now(); }
+
+	public boolean needsRestock() { return this.quantity <= this.minQuantity; }
+
+	public boolean isOverstock() { return this.quantity >= this.maxQuantity; }
 }

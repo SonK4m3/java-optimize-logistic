@@ -20,7 +20,7 @@ public class WarehouseReceiptDTO {
 	private LocalDateTime createdAt;
 	private String status;
 	private String type;
-	private Long warehouseId;
+	private StorageLocationDTO storageLocation;
 	private List<ReceiptItemDTO> items;
 	private String notes;
 	private String createdBy;
@@ -33,7 +33,8 @@ public class WarehouseReceiptDTO {
 				.createdAt(warehouseReceipt.getCreatedAt())
 				.status(warehouseReceipt.getStatus().name())
 				.type(warehouseReceipt.getType().name())
-				.warehouseId(warehouseReceipt.getWarehouse().getId())
+				.storageLocation(StorageLocationDTO
+						.fromEntity(warehouseReceipt.getStorageLocation()))
 				.items(warehouseReceipt.getReceiptDetails().stream()
 						.map(ReceiptItemDTO::fromEntity).collect(Collectors.toList()))
 				.notes(warehouseReceipt.getNotes())

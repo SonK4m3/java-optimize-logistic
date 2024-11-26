@@ -2,10 +2,11 @@ package sonnh.opt.opt_plan.service;
 
 import sonnh.opt.opt_plan.model.Inventory;
 import sonnh.opt.opt_plan.payload.request.InventoryCreateRequest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface InventoryService {
 	Inventory createInventory(InventoryCreateRequest request);

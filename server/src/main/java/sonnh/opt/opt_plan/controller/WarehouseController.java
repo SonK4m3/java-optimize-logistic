@@ -97,24 +97,14 @@ public class WarehouseController {
 		return ResponseEntity.ok(ApiResponse.success(receipt));
 	}
 
-	@Operation(summary = "Update inventory", description = "Updates inventory levels for products in warehouse")
-	@PutMapping("/{warehouseId}/inventory")
-	public ResponseEntity<ApiResponse<List<InventoryDTO>>> updateInventory(
-			@PathVariable Long warehouseId,
-			@Valid @RequestBody List<InventoryUpdateRequest> updates) {
-		List<InventoryDTO> updatedInventory = warehouseService
-				.updateInventory(warehouseId, updates);
-		return ResponseEntity.ok(ApiResponse.success(updatedInventory));
-	}
-
 	@Operation(summary = "Get all receipts", description = "Retrieves all warehouse receipts")
 	@GetMapping("/receipts")
 	public ResponseEntity<ApiResponse<PageResponse<WarehouseReceiptDTO>>> getAllReceipts(
-			@RequestParam(required = false) Long warehouseId,
+			@RequestParam(required = false) Long storageLocationId,
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size) {
 		PageResponse<WarehouseReceiptDTO> receipts = warehouseService
-				.getAllReceipts(warehouseId, page, size);
+				.getAllReceipts(storageLocationId, page, size);
 		return ResponseEntity.ok(ApiResponse.success(receipts));
 	}
 
@@ -124,5 +114,13 @@ public class WarehouseController {
 			@PathVariable Long warehouseId) {
 		WarehouseSpaceDTO spaceInfo = warehouseService.checkWarehouseSpace(warehouseId);
 		return ResponseEntity.ok(ApiResponse.success(spaceInfo));
+	}
+
+	@Operation(summary = "Get warehouse by ID", description = "Retrieves warehouse details by ID")
+	@GetMapping("/{id}")
+	public ResponseEntity<ApiResponse<WarehouseDTO>> getWarehouseById(
+			@PathVariable Long id) {
+		WarehouseDTO warehouse = warehouseService.getWarehouseById(id);
+		return ResponseEntity.ok(ApiResponse.success(warehouse));
 	}
 }

@@ -16,20 +16,23 @@ import sonnh.opt.opt_plan.constant.enums.InventoryStatus;
 @AllArgsConstructor
 public class InventoryDTO {
 	private Long id;
+	private StorageLocationDTO storageLocation;
 	private ProductDTO product;
-	private WarehouseDTO warehouse;
 	private Integer quantity;
 	private Integer minQuantity;
 	private Integer maxQuantity;
 	private String location;
 	private InventoryStatus status;
+	private LocalDateTime expiryDate;
 
 	public static InventoryDTO fromEntity(Inventory inventory) {
 		return InventoryDTO.builder().id(inventory.getId())
 				.product(ProductDTO.fromEntity(inventory.getProduct()))
-				.warehouse(WarehouseDTO.fromEntity(inventory.getWarehouse()))
+				.storageLocation(
+						StorageLocationDTO.fromEntity(inventory.getStorageLocation()))
 				.quantity(inventory.getQuantity()).minQuantity(inventory.getMinQuantity())
 				.maxQuantity(inventory.getMaxQuantity()).location(inventory.getLocation())
-				.status(inventory.getStatus()).build();
+				.status(inventory.getStatus()).expiryDate(inventory.getExpiryDate())
+				.build();
 	}
 }

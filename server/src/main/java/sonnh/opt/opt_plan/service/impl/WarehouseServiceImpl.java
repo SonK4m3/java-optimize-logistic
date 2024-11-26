@@ -19,6 +19,7 @@ import sonnh.opt.opt_plan.model.WarehouseReceipt;
 import sonnh.opt.opt_plan.model.ReceiptDetail;
 import sonnh.opt.opt_plan.model.Staff;
 import sonnh.opt.opt_plan.model.StorageArea;
+import sonnh.opt.opt_plan.model.StorageLocation;
 import sonnh.opt.opt_plan.model.Inventory;
 import sonnh.opt.opt_plan.model.Location;
 import sonnh.opt.opt_plan.model.Product;
@@ -37,6 +38,7 @@ import sonnh.opt.opt_plan.repository.WarehouseReceiptRepository;
 import sonnh.opt.opt_plan.repository.ReceiptDetailRepository;
 import sonnh.opt.opt_plan.repository.StaffRepository;
 import sonnh.opt.opt_plan.repository.LocationRepository;
+import sonnh.opt.opt_plan.repository.StorageLocationRepository;
 import sonnh.opt.opt_plan.service.WarehouseService;
 import sonnh.opt.opt_plan.utils.SecurityUtils;
 import sonnh.opt.opt_plan.constant.enums.WarehouseStatus;
@@ -62,6 +64,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 	private final ReceiptDetailRepository receiptDetailRepository;
 	private final SecurityUtils securityUtils;
 	private final LocationRepository locationRepository;
+	private final StorageLocationRepository storageLocationRepository;
 
 	@Override
 	@Transactional
@@ -108,7 +111,12 @@ public class WarehouseServiceImpl implements WarehouseService {
 				.findByStatusAndType(WarehouseStatus.ACTIVE, WarehouseType.NORMAL);
 
 		return warehouses.stream().filter(warehouse -> {
-			Integer currentOccupancy = warehouse.getInventories().stream()
+			List<StorageArea> storageAreas = warehouse.getStorageAreas();
+			List<StorageLocation> storageLocations = storageAreas.stream()
+					.flatMap(area -> area.getStorageLocations().stream()).toList();
+
+			Integer currentOccupancy = inventoryRepository
+					.findByStorageLocationIn(storageLocations).stream()
 					.mapToInt(Inventory::getQuantity).sum();
 
 			return (warehouse.getTotalCapacity() - currentOccupancy) >= requiredCapacity;
@@ -150,9 +158,13 @@ public class WarehouseServiceImpl implements WarehouseService {
 		User currentUser = securityUtils.getCurrentUser()
 				.orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
-		Warehouse warehouse = getWarehouseOrThrow(warehouseId);
+		StorageLocation storageLocation = storageLocationRepository
+				.findById(request.getStorageLocationId())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Storage location not found with id: "
+								+ request.getStorageLocationId()));
 
-		final WarehouseReceipt warehouseReceipt = createWarehouseReceipt(warehouse,
+		final WarehouseReceipt warehouseReceipt = createWarehouseReceipt(storageLocation,
 				currentUser, request);
 
 		List<ReceiptDetail> savedReceiptDetails = createAndSaveReceiptDetails(request,
@@ -164,14 +176,15 @@ public class WarehouseServiceImpl implements WarehouseService {
 		return WarehouseReceiptDTO.fromEntity(savedReceipt);
 	}
 
-	private WarehouseReceipt createWarehouseReceipt(Warehouse warehouse, User user,
-			ReceiptCreateRequest request) {
-		WarehouseReceipt receipt = WarehouseReceipt.builder().warehouse(warehouse)
-				.code(WarehouseReceipt.generateCode()).type(request.getType())
-				.receiptDate(LocalDateTime.now()).status(ReceiptStatus.DRAFT)
-				.receiptDetails(new ArrayList<>()).createdBy(user).confirmedBy(null)
-				.confirmedAt(null).notes(request.getNotes())
-				.createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build();
+	private WarehouseReceipt createWarehouseReceipt(StorageLocation storageLocation,
+			User user, ReceiptCreateRequest request) {
+		WarehouseReceipt receipt = WarehouseReceipt.builder()
+				.storageLocation(storageLocation).code(WarehouseReceipt.generateCode())
+				.type(request.getType()).receiptDate(LocalDateTime.now())
+				.status(ReceiptStatus.DRAFT).receiptDetails(new ArrayList<>())
+				.createdBy(user).confirmedBy(null).confirmedAt(null)
+				.notes(request.getNotes()).createdAt(LocalDateTime.now())
+				.updatedAt(LocalDateTime.now()).build();
 		return warehouseReceiptRepository.save(receipt);
 	}
 
@@ -211,23 +224,25 @@ public class WarehouseServiceImpl implements WarehouseService {
 		warehouseReceipt.setUpdatedAt(LocalDateTime.now());
 		warehouseReceipt = warehouseReceiptRepository.save(warehouseReceipt);
 
+		Warehouse warehouse = warehouseReceipt.getStorageLocation().getStorageArea()
+				.getWarehouse();
+
 		for (ReceiptDetail detail : warehouseReceipt.getReceiptDetails()) {
-			Inventory inventory = inventoryRepository
-					.findByWarehouseAndProduct(warehouseReceipt.getWarehouse().getId(),
-							detail.getProduct().getId())
-					.orElse(null);
+			Inventory inventory = inventoryRepository.findByStorageLocationAndProduct(
+					warehouseReceipt.getStorageLocation().getId(),
+					detail.getProduct().getId()).orElse(null);
 
 			if (inventory == null) {
-				inventory = Inventory.builder().warehouse(warehouseReceipt.getWarehouse())
+				inventory = Inventory.builder()
+						.storageLocation(warehouseReceipt.getStorageLocation())
 						.product(detail.getProduct()).quantity(detail.getQuantity())
 						.status(InventoryStatus.ACTIVE).location("A1").minQuantity(0)
 						.maxQuantity(100).lastCheckedAt(LocalDateTime.now())
 						.createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
-						.build();
+						.expiryDate(LocalDateTime.now().plusYears(1)).build();
 			} else {
 				if (warehouseReceipt.getType() == ReceiptType.INBOUND) {
-					if (getAvailableCapacity(warehouseReceipt.getWarehouse()) < detail
-							.getQuantity()) {
+					if (getAvailableCapacity(warehouse) < detail.getQuantity()) {
 						warehouseReceipt.setStatus(ReceiptStatus.CANCELLED);
 						warehouseReceiptRepository.save(warehouseReceipt);
 						throw new BadRequestException(
@@ -251,34 +266,14 @@ public class WarehouseServiceImpl implements WarehouseService {
 	}
 
 	@Override
-	public List<InventoryDTO> updateInventory(Long warehouseId,
-			List<InventoryUpdateRequest> updates) {
-		Warehouse warehouse = getWarehouseOrThrow(warehouseId);
-		List<InventoryDTO> updatedInventories = new ArrayList<>();
-
-		for (InventoryUpdateRequest update : updates) {
-			Inventory inventory = inventoryRepository
-					.findByWarehouseAndProduct(warehouse.getId(), update.getProductId())
-					.orElseThrow(() -> new ResourceNotFoundException(
-							"Inventory not found for product id: "
-									+ update.getProductId()));
-			inventory.setQuantity(update.getQuantity());
-			inventoryRepository.save(inventory);
-			updatedInventories.add(InventoryDTO.fromEntity(inventory));
-		}
-
-		return updatedInventories;
-	}
-
-	@Override
-	public PageResponse<WarehouseReceiptDTO> getAllReceipts(Long warehouseId, int page,
-			int size) {
+	public PageResponse<WarehouseReceiptDTO> getAllReceipts(Long storageLocationId,
+			int page, int size) {
 		Pageable pageable = PageRequest.of(page - 1, size,
 				Sort.by("createdAt").descending());
 		Page<WarehouseReceipt> receipts;
-		if (warehouseId != null) {
-			receipts = warehouseReceiptRepository.findByWarehouseIdAndType(warehouseId,
-					ReceiptType.INBOUND, pageable);
+		if (storageLocationId != null) {
+			receipts = warehouseReceiptRepository.findByStorageLocationIdAndType(
+					storageLocationId, ReceiptType.INBOUND, pageable);
 		} else {
 			receipts = warehouseReceiptRepository.findAll(pageable);
 		}
@@ -306,8 +301,13 @@ public class WarehouseServiceImpl implements WarehouseService {
 	public WarehouseSpaceDTO checkWarehouseSpace(Long warehouseId) {
 		Warehouse warehouse = getWarehouseOrThrow(warehouseId);
 
-		int usedCapacity = inventoryRepository.findByWarehouse(warehouse).stream()
-				.mapToInt(Inventory::getQuantity).sum();
+		List<StorageArea> storageAreas = warehouse.getStorageAreas();
+
+		List<StorageLocation> storageLocations = storageAreas.stream()
+				.flatMap(area -> area.getStorageLocations().stream()).toList();
+
+		int usedCapacity = inventoryRepository.findByStorageLocationIn(storageLocations)
+				.stream().mapToInt(Inventory::getQuantity).sum();
 
 		int availableCapacity = warehouse.getTotalCapacity() - usedCapacity;
 
@@ -330,15 +330,23 @@ public class WarehouseServiceImpl implements WarehouseService {
 	}
 
 	private Integer getAvailableCapacity(Warehouse warehouse) {
-		int usedCapacity = inventoryRepository.findByWarehouse(warehouse).stream()
-				.mapToInt(Inventory::getQuantity).sum();
+		List<StorageArea> storageAreas = warehouse.getStorageAreas();
+		List<StorageLocation> storageLocations = storageAreas.stream()
+				.flatMap(area -> area.getStorageLocations().stream()).toList();
+
+		int usedCapacity = inventoryRepository.findByStorageLocationIn(storageLocations)
+				.stream().mapToInt(Inventory::getQuantity).sum();
 
 		return warehouse.getTotalCapacity() - usedCapacity;
 	}
 
 	private Double getAvailableArea(Warehouse warehouse) {
-		double usedArea = warehouse.getStorageAreas().stream()
-				.mapToDouble(StorageArea::getArea).sum();
+		List<StorageArea> storageAreas = warehouse.getStorageAreas();
+		List<StorageLocation> storageLocations = storageAreas.stream()
+				.flatMap(area -> area.getStorageLocations().stream()).toList();
+
+		double usedArea = inventoryRepository.findByStorageLocationIn(storageLocations)
+				.stream().mapToDouble(Inventory::getQuantity).sum();
 
 		return warehouse.getTotalArea() - usedArea;
 	}

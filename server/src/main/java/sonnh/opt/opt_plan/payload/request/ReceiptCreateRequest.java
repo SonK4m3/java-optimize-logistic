@@ -19,6 +19,8 @@ public class ReceiptCreateRequest {
 	@Size(min = 1, message = "At least one item is required")
 	private List<ReceiptItemRequest> items;
 
+	private Long storageLocationId;
+
 	private String notes;
 
 	private ReceiptType type;

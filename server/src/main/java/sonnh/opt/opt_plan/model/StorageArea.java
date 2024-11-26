@@ -13,6 +13,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.CascadeType;
+
+import java.util.ArrayList;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,9 +36,6 @@ public class StorageArea {
 	private Long id;
 
 	@Column(nullable = false)
-	private String code;
-
-	@Column(nullable = false)
 	private String name;
 
 	@Enumerated(EnumType.STRING)
@@ -42,7 +43,7 @@ public class StorageArea {
 	private StorageAreaType type; // RECEIVING, SHIPPING, STORAGE
 
 	@Column(nullable = false)
-	private Integer capacity;
+	private Integer area;
 
 	@Column(nullable = false)
 	private Integer currentOccupancy;
@@ -57,5 +58,9 @@ public class StorageArea {
 	@OneToMany(mappedBy = "storageArea")
 	private List<WarehouseProduct> warehouseProducts;
 
-	public double getArea() { return this.capacity * 1.0; }
+	@OneToMany(mappedBy = "storageArea", cascade = {
+			CascadeType.PERSIST, CascadeType.MERGE
+	}, orphanRemoval = true)
+	@Builder.Default
+	private List<StorageLocation> storageLocations = new ArrayList<>();
 }

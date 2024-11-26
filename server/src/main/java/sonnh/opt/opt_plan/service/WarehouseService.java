@@ -26,12 +26,9 @@ public interface WarehouseService {
 
 	WarehouseReceiptDTO confirmReceipt(Long receiptId) throws BadRequestException;
 
-	List<InventoryDTO> updateInventory(Long warehouseId,
-			List<InventoryUpdateRequest> updates);
-
 	WarehouseReceiptDTO createReceipt(Long warehouseId, ReceiptCreateRequest request);
 
-	PageResponse<WarehouseReceiptDTO> getAllReceipts(Long warehouseId, int page,
+	PageResponse<WarehouseReceiptDTO> getAllReceipts(Long storageLocationId, int page,
 			int size);
 
 	WarehouseReceiptDTO rejectReceipt(Long receiptId);

@@ -9,6 +9,7 @@ import sonnh.opt.opt_plan.constant.enums.WarehouseType;
 import sonnh.opt.opt_plan.constant.enums.WarehouseStatus;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,14 +52,11 @@ public class Warehouse {
 	@JoinColumn(name = "manager_id")
 	private Staff manager;
 
-	@OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
-	private List<StorageArea> storageAreas;
-
-	@OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
-	private List<Inventory> inventories;
-
-	@OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL)
-	private List<WarehouseReceipt> receipts;
+	@OneToMany(mappedBy = "warehouse", cascade = {
+			CascadeType.PERSIST, CascadeType.MERGE
+	}, orphanRemoval = true)
+	@Builder.Default
+	private List<StorageArea> storageAreas = new ArrayList<>();
 
 	@Column(nullable = false)
 	private LocalDateTime createdAt;

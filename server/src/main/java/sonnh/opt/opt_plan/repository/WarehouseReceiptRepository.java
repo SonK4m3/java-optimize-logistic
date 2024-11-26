@@ -21,10 +21,11 @@ public interface WarehouseReceiptRepository
 
 	Optional<WarehouseReceipt> findByCode(String code);
 
-	Page<WarehouseReceipt> findByWarehouseIdAndType(Long warehouseId, ReceiptType type,
-			Pageable pageable);
+	Page<WarehouseReceipt> findByStorageLocationIdAndType(Long storageLocationId,
+			ReceiptType type, Pageable pageable);
 
-	Page<WarehouseReceipt> findByWarehouseId(Long warehouseId, Pageable pageable);
+	Page<WarehouseReceipt> findByStorageLocationId(Long storageLocationId,
+			Pageable pageable);
 
 	@Query("SELECT wr FROM WarehouseReceipt wr WHERE wr.status = :status "
 			+ "AND wr.receiptDate BETWEEN :startDate AND :endDate")
@@ -32,17 +33,9 @@ public interface WarehouseReceiptRepository
 			@Param("startDate") LocalDateTime startDate,
 			@Param("endDate") LocalDateTime endDate);
 
-	List<WarehouseReceipt> findByWarehouseIdAndStatus(Long warehouseId,
-			ReceiptStatus status);
-
 	List<WarehouseReceipt> findByCreatedById(Long userId);
 
 	long countByTypeAndStatus(ReceiptType type, ReceiptStatus status);
 
 	boolean existsByCode(String code);
-
-	@Query("SELECT wr FROM WarehouseReceipt wr WHERE wr.warehouse.id = :warehouseId "
-			+ "ORDER BY wr.createdAt DESC LIMIT 1")
-	Optional<WarehouseReceipt> findLatestByWarehouseId(
-			@Param("warehouseId") Long warehouseId);
 }

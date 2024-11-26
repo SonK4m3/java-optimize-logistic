@@ -7,13 +7,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
 import sonnh.opt.opt_plan.model.Inventory;
+import sonnh.opt.opt_plan.model.StorageArea;
+import sonnh.opt.opt_plan.model.StorageLocation;
+import sonnh.opt.opt_plan.model.Warehouse;
 import sonnh.opt.opt_plan.repository.InventoryRepository;
 import sonnh.opt.opt_plan.service.InventoryService;
 import sonnh.opt.opt_plan.payload.request.InventoryCreateRequest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-import sonnh.opt.opt_plan.model.Warehouse;
 import sonnh.opt.opt_plan.repository.WarehouseRepository;
 
 @Service
@@ -65,6 +68,12 @@ public class InventoryServiceImpl implements InventoryService {
 		Warehouse warehouse = warehouseRepository.findById(warehouseId)
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Warehouse not found with id: " + warehouseId));
-		return inventoryRepository.findByWarehouse(warehouse);
+
+		List<StorageArea> storageAreas = warehouse.getStorageAreas();
+
+		List<StorageLocation> storageLocations = storageAreas.stream()
+				.flatMap(area -> area.getStorageLocations().stream()).toList();
+
+		return inventoryRepository.findByStorageLocationIn(storageLocations);
 	}
 }

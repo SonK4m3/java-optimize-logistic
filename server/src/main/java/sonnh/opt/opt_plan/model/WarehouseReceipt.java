@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -48,9 +49,9 @@ public class WarehouseReceipt {
 	@Column(nullable = false)
 	private LocalDateTime receiptDate;
 
-	@ManyToOne
-	@JoinColumn(name = "warehouse_id", nullable = false)
-	private Warehouse warehouse;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "storage_location_id", nullable = false)
+	private StorageLocation storageLocation;
 
 	@ManyToOne
 	@JoinColumn(name = "created_by", nullable = false)
