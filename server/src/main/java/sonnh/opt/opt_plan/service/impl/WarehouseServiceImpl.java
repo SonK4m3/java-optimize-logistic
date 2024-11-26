@@ -90,9 +90,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 	}
 
 	@Override
-	public WarehouseDTO getWarehouseById(Long id) {
-		return WarehouseDTO.fromEntity(getWarehouseOrThrow(id));
-	}
+	public Warehouse getWarehouseById(Long id) { return getWarehouseOrThrow(id); }
 
 	@Override
 	public PageResponse<WarehouseDTO> getAllWarehouses(int page, int size) {

@@ -12,6 +12,8 @@ import sonnh.opt.opt_plan.payload.request.ProductCreateRequest;
 import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.service.ProductService;
 import sonnh.opt.opt_plan.constant.common.Api;
+import sonnh.opt.opt_plan.model.Product;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping(Api.PRODUCT_ROUTE)
@@ -24,7 +26,7 @@ public class ProductController {
 	@PostMapping
 	public ResponseEntity<ApiResponse<ProductDTO>> createProduct(
 			@Valid @RequestBody ProductCreateRequest request) {
-		ProductDTO product = productService.createProduct(request);
+		ProductDTO product = ProductDTO.fromEntity(productService.createProduct(request));
 		return ResponseEntity
 				.ok(ApiResponse.success("Product created successfully", product));
 	}
@@ -32,7 +34,7 @@ public class ProductController {
 	@Operation(summary = "Get product by ID")
 	@GetMapping("/{id}")
 	public ResponseEntity<ApiResponse<ProductDTO>> getProductById(@PathVariable Long id) {
-		ProductDTO product = productService.getProductById(id);
+		ProductDTO product = ProductDTO.fromEntity(productService.getProductById(id));
 		return ResponseEntity.ok(ApiResponse.success(product));
 	}
 
@@ -42,8 +44,9 @@ public class ProductController {
 			@RequestParam(required = false) String query,
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int size) {
-		PageResponse<ProductDTO> products = productService.getAllProducts(query, page,
-				size);
-		return ResponseEntity.ok(ApiResponse.success(products));
+		Page<Product> products = productService.getAllProducts(query, page, size);
+		PageResponse<ProductDTO> response = PageResponse.of(products,
+				ProductDTO::fromEntity);
+		return ResponseEntity.ok(ApiResponse.success(response));
 	}
 }

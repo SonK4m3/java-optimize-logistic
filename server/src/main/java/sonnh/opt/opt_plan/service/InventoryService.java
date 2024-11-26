@@ -16,4 +16,6 @@ public interface InventoryService {
 	Page<Inventory> findAll(Pageable pageable);
 
 	List<Inventory> getInventoriesByWarehouseId(Long warehouseId);
+
+	Inventory decreaseStock(Long warehouseId, Long productId, int quantity);
 }

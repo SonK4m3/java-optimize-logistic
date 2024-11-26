@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Data
 @Builder
@@ -22,5 +23,13 @@ public class PageResponse<T> {
 				.limit(page.getSize()).totalDocs(page.getTotalElements())
 				.totalPages(page.getTotalPages()).hasNextPage(page.hasNext())
 				.hasPrevPage(page.hasPrevious()).build();
+	}
+
+	public static <T, DTO> PageResponse<DTO> of(Page<T> page, Function<T, DTO> mapper) {
+		return PageResponse.<DTO> builder()
+				.docs(page.getContent().stream().map(mapper).toList())
+				.page(page.getNumber()).limit(page.getSize())
+				.totalDocs(page.getTotalElements()).totalPages(page.getTotalPages())
+				.hasNextPage(page.hasNext()).hasPrevPage(page.hasPrevious()).build();
 	}
 }

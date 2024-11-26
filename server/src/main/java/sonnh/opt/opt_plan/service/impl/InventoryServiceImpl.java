@@ -10,20 +10,24 @@ import sonnh.opt.opt_plan.model.Inventory;
 import sonnh.opt.opt_plan.model.StorageArea;
 import sonnh.opt.opt_plan.model.StorageLocation;
 import sonnh.opt.opt_plan.model.Warehouse;
+import sonnh.opt.opt_plan.model.Product;
 import sonnh.opt.opt_plan.repository.InventoryRepository;
 import sonnh.opt.opt_plan.service.InventoryService;
 import sonnh.opt.opt_plan.payload.request.InventoryCreateRequest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import sonnh.opt.opt_plan.repository.WarehouseRepository;
+import sonnh.opt.opt_plan.repository.ProductRepository;
 
 @Service
 @RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
 	private final InventoryRepository inventoryRepository;
 	private final WarehouseRepository warehouseRepository;
+	private final ProductRepository productRepository;
 
 	/**
 	 * Create new inventory
@@ -75,5 +79,28 @@ public class InventoryServiceImpl implements InventoryService {
 				.flatMap(area -> area.getStorageLocations().stream()).toList();
 
 		return inventoryRepository.findByStorageLocationIn(storageLocations);
+	}
+
+	@Override
+	@Transactional
+	public Inventory decreaseStock(Long warehouseId, Long productId, int quantity) {
+		Product product = productRepository.findById(productId)
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Product not found with id: " + productId));
+
+		List<Inventory> inventories = getInventoriesByWarehouseId(warehouseId);
+
+		Inventory inventory = inventories.stream()
+				.filter(inv -> inv.getProduct().getId().equals(product.getId()))
+				.findFirst().orElseThrow(() -> new ResourceNotFoundException(
+						"Inventory not found with product id: " + productId));
+
+		if (inventory.getQuantity() < quantity) {
+			inventory.setQuantity(0);
+		} else {
+			inventory.setQuantity(inventory.getQuantity() - quantity);
+		}
+
+		return inventoryRepository.save(inventory);
 	}
 }

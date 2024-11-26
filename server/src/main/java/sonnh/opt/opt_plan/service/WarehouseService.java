@@ -1,20 +1,19 @@
 package sonnh.opt.opt_plan.service;
 
-import sonnh.opt.opt_plan.payload.dto.InventoryDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseReceiptDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseSpaceDTO;
-import sonnh.opt.opt_plan.payload.request.InventoryUpdateRequest;
 import sonnh.opt.opt_plan.payload.request.ReceiptCreateRequest;
 import sonnh.opt.opt_plan.payload.request.WarehouseCreateRequest;
 import sonnh.opt.opt_plan.payload.response.PageResponse;
 import java.util.List;
 import org.apache.coyote.BadRequestException;
+import sonnh.opt.opt_plan.model.Warehouse;
 
 public interface WarehouseService {
 	WarehouseDTO createWarehouse(WarehouseCreateRequest request);
 
-	WarehouseDTO getWarehouseById(Long id);
+	Warehouse getWarehouseById(Long id);
 
 	PageResponse<WarehouseDTO> getAllWarehouses(int page, int size);
 

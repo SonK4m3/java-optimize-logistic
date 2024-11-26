@@ -18,8 +18,6 @@ import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.service.WarehouseService;
 import sonnh.opt.opt_plan.payload.dto.WarehouseReceiptDTO;
 import sonnh.opt.opt_plan.payload.request.ReceiptCreateRequest;
-import sonnh.opt.opt_plan.payload.request.InventoryUpdateRequest;
-import sonnh.opt.opt_plan.payload.dto.InventoryDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseSpaceDTO;
 
 import java.util.List;
@@ -120,7 +118,8 @@ public class WarehouseController {
 	@GetMapping("/{id}")
 	public ResponseEntity<ApiResponse<WarehouseDTO>> getWarehouseById(
 			@PathVariable Long id) {
-		WarehouseDTO warehouse = warehouseService.getWarehouseById(id);
+		WarehouseDTO warehouse = WarehouseDTO
+				.fromEntity(warehouseService.getWarehouseById(id));
 		return ResponseEntity.ok(ApiResponse.success(warehouse));
 	}
 }
