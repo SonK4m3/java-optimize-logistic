@@ -5,9 +5,7 @@ import lombok.Data;
 @Data
 public class CustomerAddressRequest {
 	private String address;
-	private String city;
-	private String country;
+	private Double latitude;
+	private Double longitude;
 	private Boolean isDefault;
-	private String addressType;
-	private String recipientInfo;
 }

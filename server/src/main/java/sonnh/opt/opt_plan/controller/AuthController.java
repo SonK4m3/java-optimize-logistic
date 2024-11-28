@@ -68,35 +68,32 @@ public class AuthController {
 
     @Operation(summary = "Register user", description = "Registers a new user in the system")
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<?>> registerUser(
+    public ResponseEntity<ApiResponse<String>> registerUser(
             @RequestBody SignupRequest signUpRequest) {
-        try {
-            // Validate email uniqueness
-            if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Email is already in use"));
-            }
-
-            // Create and save new user
-            User user = User.builder().username(signUpRequest.getUsername())
-                    .email(signUpRequest.getEmail())
-                    .password(encoder.encode(signUpRequest.getPassword()))
-                    .fullName(signUpRequest.getFullName()).role(signUpRequest.getRole())
-                    .isActive(true).build();
-
-            userRepository.save(user);
-
-            if (signUpRequest.getRole() == UserRole.STAFF) {
-                staffService.createStaff(Staff.builder().user(user).department(null)
-                        .position(Position.WORKER).build());
-            } else if (signUpRequest.getRole() == UserRole.CUSTOMER) {
-                customerService.createCustomer(Customer.builder().user(user).build());
-            }
-
-            return ResponseEntity.ok(ApiResponse.success("User registered successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false,
-                    "Registration failed: " + e.getMessage(), null));
+        // Validate email uniqueness
+        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Email is already in use"));
         }
+
+        // Create and save new user
+        User user = User.builder().username(signUpRequest.getUsername())
+                .email(signUpRequest.getEmail())
+                .password(encoder.encode(signUpRequest.getPassword()))
+                .fullName(signUpRequest.getFullName()).role(signUpRequest.getRole())
+                .isActive(true).build();
+
+        userRepository.save(user);
+
+        if (signUpRequest.getRole() == UserRole.STAFF) {
+            staffService.createStaff(Staff.builder().user(user).department(null)
+                    .position(Position.WORKER).build());
+        } else if (signUpRequest.getRole() == UserRole.CUSTOMER) {
+            customerService.createCustomer(
+                    Customer.builder().user(user).phone("0000000000").build());
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully"));
+
     }
 }

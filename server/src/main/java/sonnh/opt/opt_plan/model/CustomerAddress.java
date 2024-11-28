@@ -22,20 +22,10 @@ public class CustomerAddress {
 	@JoinColumn(name = "customer_id", nullable = false)
 	private Customer customer;
 
-	@Column(nullable = false)
-	private String address;
-
-	@Column(nullable = false)
-	private String city;
-
-	@Column(nullable = false)
-	private String country;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "location_id", nullable = false)
+	private Location location;
 
 	@Column(nullable = false)
 	private Boolean isDefault;
-
-	@Column(name = "address_type")
-	private String addressType;
-
-	private String recipientInfo;
 }

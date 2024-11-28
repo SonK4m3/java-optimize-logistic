@@ -36,7 +36,8 @@ public class RouteOptimizationServiceImpl implements RouteOptimizationService {
 
 		// Sort deliveries by weight for better capacity utilization
 		List<Delivery> sortedDeliveries = new ArrayList<>(deliveries);
-		sortedDeliveries.sort((d1, d2) -> Double.compare(d2.getWeight(), d1.getWeight()));
+		sortedDeliveries.sort((d1, d2) -> Double.compare(d2.getOrder().getTotalWeight(),
+				d1.getOrder().getTotalWeight()));
 
 		// Sort vehicles by capacity
 		List<Vehicle> sortedVehicles = new ArrayList<>(vehicles);
@@ -117,8 +118,8 @@ public class RouteOptimizationServiceImpl implements RouteOptimizationService {
 			Vehicle bestVehicle = findBestVehicleForDelivery(delivery, remainingCapacity);
 			if (bestVehicle != null) {
 				assignments.get(bestVehicle).add(delivery);
-				remainingCapacity.put(bestVehicle,
-						remainingCapacity.get(bestVehicle) - delivery.getWeight());
+				remainingCapacity.put(bestVehicle, remainingCapacity.get(bestVehicle)
+						- delivery.getOrder().getTotalWeight());
 			}
 		}
 
@@ -131,7 +132,7 @@ public class RouteOptimizationServiceImpl implements RouteOptimizationService {
 		double minRemainingCapacity = Double.MAX_VALUE;
 
 		for (Map.Entry<Vehicle, Double> entry : remainingCapacity.entrySet()) {
-			if (entry.getValue() >= delivery.getWeight()
+			if (entry.getValue() >= delivery.getOrder().getTotalWeight()
 					&& entry.getValue() < minRemainingCapacity) {
 				bestVehicle = entry.getKey();
 				minRemainingCapacity = entry.getValue();

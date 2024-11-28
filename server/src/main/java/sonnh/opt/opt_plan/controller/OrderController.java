@@ -8,6 +8,9 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+
+import sonnh.opt.opt_plan.model.Order;
 import sonnh.opt.opt_plan.payload.ApiResponse;
 import sonnh.opt.opt_plan.payload.dto.DeliveryDTO;
 import sonnh.opt.opt_plan.payload.dto.OrderDTO;
@@ -29,7 +32,8 @@ public class OrderController {
 	@PostMapping
 	public ResponseEntity<ApiResponse<OrderDTO>> createOrder(
 			@Valid @RequestBody OrderCreateRequest orderRequest) {
-		OrderDTO createdOrder = orderService.createOrder(orderRequest);
+		OrderDTO createdOrder = OrderDTO
+				.fromEntity(orderService.createOrder(orderRequest));
 		return ResponseEntity
 				.ok(ApiResponse.success("Order created successfully", createdOrder));
 	}
@@ -48,51 +52,17 @@ public class OrderController {
 		pageParams.setSortBy(sortBy);
 		pageParams.setSortDir(sortDir);
 
-		PageResponse<OrderDTO> orders = orderService.getOrdersByUser(pageParams);
-		return ResponseEntity.ok(ApiResponse.success(orders));
+		Page<Order> orders = orderService.getOrdersByUser(pageParams);
+		PageResponse<OrderDTO> pageResponse = PageResponse.of(orders,
+				OrderDTO::fromEntity);
+		return ResponseEntity.ok(ApiResponse.success(pageResponse));
 	}
 
 	@Operation(summary = "Get order by id")
 	@GetMapping
 	public ResponseEntity<ApiResponse<List<OrderDTO>>> getAllOrders() {
-		List<OrderDTO> orders = orderService.getAllOrders();
-		return ResponseEntity.ok(ApiResponse.success(orders));
-	}
-
-	@Operation(summary = "Get order by warehouse")
-	@GetMapping("/warehouse/{warehouseId}")
-	public ResponseEntity<ApiResponse<List<OrderDTO>>> getOrderByWarehouse(
-			@PathVariable Long warehouseId) {
-		List<OrderDTO> orders = orderService.getOrdersByWarehouse(warehouseId);
-		return ResponseEntity.ok(ApiResponse.success(orders));
-	}
-
-	@Operation(summary = "Accept order for delivery")
-	@PostMapping("/{driverId}/accept-order/{orderId}")
-	public ResponseEntity<ApiResponse<DeliveryDTO>> acceptOrderForDelivery(
-			@PathVariable Long driverId, @PathVariable Long orderId) {
-
-		// Assign order to driver and create delivery
-		DeliveryDTO delivery = orderService.acceptOrderForDelivery(driverId, orderId);
-
-		return ResponseEntity
-				.ok(ApiResponse.success("Order accepted for delivery", delivery));
-	}
-
-	@Operation(summary = "Deny order for delivery")
-	@PostMapping("/{driverId}/reject-order/{orderId}")
-	public ResponseEntity<ApiResponse<DeliveryDTO>> denyOrderForDelivery(
-			@PathVariable Long driverId, @PathVariable Long orderId) {
-		DeliveryDTO delivery = orderService.denyOrderForDelivery(driverId, orderId);
-		return ResponseEntity
-				.ok(ApiResponse.success("Order denied for delivery", delivery));
-	}
-
-	@Operation(summary = "Get orders by sender id")
-	@GetMapping("/sender/{senderId}")
-	public ResponseEntity<ApiResponse<List<OrderDTO>>> getOrdersBySenderId(
-			@PathVariable Long senderId) {
-		List<OrderDTO> orders = orderService.getOrdersBySenderId(senderId);
+		List<OrderDTO> orders = orderService.getAllOrders().stream()
+				.map(OrderDTO::fromEntity).toList();
 		return ResponseEntity.ok(ApiResponse.success(orders));
 	}
 }

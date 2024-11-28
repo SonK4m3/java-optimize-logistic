@@ -103,4 +103,24 @@ public class InventoryServiceImpl implements InventoryService {
 
 		return inventoryRepository.save(inventory);
 	}
+
+	@Override
+	public List<Inventory> getInventoriesByProductId(Long productId) {
+		Product product = productRepository.findById(productId)
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Product not found with id: " + productId));
+
+		return inventoryRepository.findByProduct(product);
+	}
+
+	@Override
+	public Integer getTotalQuantityByProductId(Long productId) {
+		return getInventoriesByProductId(productId).stream()
+				.mapToInt(Inventory::getQuantity).sum();
+	}
+
+	@Override
+	public Boolean checkStockAvailability(Long productId, int quantity) {
+		return getTotalQuantityByProductId(productId) >= quantity;
+	}
 }

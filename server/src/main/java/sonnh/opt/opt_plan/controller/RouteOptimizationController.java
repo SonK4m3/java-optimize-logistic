@@ -20,6 +20,7 @@ import sonnh.opt.opt_plan.payload.ApiResponse;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/v1/routes")
@@ -40,7 +41,7 @@ public class RouteOptimizationController {
 					.stream().map(this::convertToVehicle).collect(Collectors.toList());
 
 			// 2. Get pending deliveries
-			List<Delivery> pendingDeliveries = deliveryService.getPendingDeliveries();
+			List<Delivery> pendingDeliveries = new ArrayList<>();
 
 			// 3. Perform optimization
 			List<Route> optimizedRoutes = optimizationService

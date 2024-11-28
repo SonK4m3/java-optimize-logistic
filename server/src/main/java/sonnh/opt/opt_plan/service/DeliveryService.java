@@ -3,31 +3,12 @@ package sonnh.opt.opt_plan.service;
 import java.util.List;
 
 import sonnh.opt.opt_plan.model.Delivery;
-import sonnh.opt.opt_plan.payload.request.DeliveryCreateRequest;
-import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
+import sonnh.opt.opt_plan.payload.request.DeliveryUpdateRequest;
 
 public interface DeliveryService {
-	/**
-	 * Get all pending deliveries that need to be assigned to routes
-	 * 
-	 * @return List of pending deliveries
-	 */
-	List<Delivery> getPendingDeliveries();
+	List<Delivery> getDeliveriesByOrderId(Long orderId);
 
-	/**
-	 * Create new delivery request
-	 * 
-	 * @param request Delivery creation request
-	 * @return Created delivery
-	 */
-	Delivery createDelivery(DeliveryCreateRequest request);
+	Delivery updateDeliveryStatus(Long deliveryId, DeliveryUpdateRequest request);
 
-	/**
-	 * Update delivery status
-	 * 
-	 * @param deliveryId Delivery ID
-	 * @param status     New status
-	 * @return Updated delivery
-	 */
-	Delivery updateDeliveryStatus(Long deliveryId, DeliveryStatus status);
+	Delivery assignDriver(Long deliveryId, Long driverId);
 }

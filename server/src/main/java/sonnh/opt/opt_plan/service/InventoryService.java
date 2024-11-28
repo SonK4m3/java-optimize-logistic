@@ -18,4 +18,10 @@ public interface InventoryService {
 	List<Inventory> getInventoriesByWarehouseId(Long warehouseId);
 
 	Inventory decreaseStock(Long warehouseId, Long productId, int quantity);
+
+	List<Inventory> getInventoriesByProductId(Long productId);
+
+	Integer getTotalQuantityByProductId(Long productId);
+
+	Boolean checkStockAvailability(Long productId, int quantity);
 }

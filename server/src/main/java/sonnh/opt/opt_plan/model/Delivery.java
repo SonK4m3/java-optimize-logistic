@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
+import java.util.List;
+import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "deliveries")
@@ -19,37 +22,60 @@ public class Delivery {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "order_id", nullable = false)
-	private Order order;
-
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private DeliveryStatus status;
 
-	@Column(nullable = true)
+	@Column
 	private String deliveryNote;
 
-	@Column(nullable = true)
-	private LocalDateTime deliveryDate;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "pickup_location_id")
+	@JsonIgnoreProperties("deliveries")
+	private Location pickupLocation;
+
+	@Column(nullable = false)
+	private Double estimatedDistance;
+
+	@Column(nullable = false)
+	private LocalDateTime estimatedDeliveryTime;
+
+	@Column
+	private LocalDateTime actualDeliveryTime;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "driver_id")
+	@JsonIgnoreProperties("deliveries")
 	private Driver driver;
 
+	@OneToOne(mappedBy = "delivery")
+	@JsonIgnoreProperties("delivery")
+	private Order order;
+
+	@Column(nullable = false)
 	private LocalDateTime createdAt;
+
+	@Column
 	private LocalDateTime updatedAt;
+
+	@ElementCollection
+	@CollectionTable(name = "delivery_status_history", joinColumns = @JoinColumn(name = "delivery_id"))
+	private List<DeliveryStatusHistory> statusHistory;
 
 	@PrePersist
 	protected void onCreate() {
 		createdAt = LocalDateTime.now();
-		updatedAt = LocalDateTime.now();
-		if (status == null) {
-			status = DeliveryStatus.PENDING;
-		}
+		status = DeliveryStatus.PENDING;
 	}
 
-	@PreUpdate
-	protected void onUpdate() { updatedAt = LocalDateTime.now(); }
+	public void updateStatus(DeliveryStatus newStatus, String note) {
+		this.status = newStatus;
+		this.updatedAt = LocalDateTime.now();
 
-	public double getWeight() { return order.getWeight(); }
+		if (statusHistory == null) {
+			statusHistory = new ArrayList<>();
+		}
+		statusHistory.add(DeliveryStatusHistory.builder().status(newStatus).note(note)
+				.timestamp(LocalDateTime.now()).build());
+	}
 }

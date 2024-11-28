@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -14,13 +13,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import sonnh.opt.opt_plan.constant.enums.CargoType;
+import lombok.ToString;
 import sonnh.opt.opt_plan.constant.enums.OrderPriority;
 import sonnh.opt.opt_plan.constant.enums.OrderStatus;
-import sonnh.opt.opt_plan.constant.enums.PayerType;
-import sonnh.opt.opt_plan.constant.enums.PickupTimeType;
-import sonnh.opt.opt_plan.constant.enums.ServiceType;
 
 @Entity
 @Table(name = "orders", indexes = {
@@ -33,79 +28,75 @@ import sonnh.opt.opt_plan.constant.enums.ServiceType;
 @JsonIgnoreProperties({
 		"hibernateLazyInitializer", "handler"
 })
+@ToString(exclude = {
+		"customer", "orderDetails"
+})
 public class Order {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true)
 	private String orderCode;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "customer_id", nullable = false)
+	@JsonIgnoreProperties("orders")
+	private Customer customer;
+
 	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private OrderStatus status;
 
 	@Enumerated(EnumType.STRING)
 	private OrderPriority priority;
 
-	@Enumerated(EnumType.STRING)
-	private CargoType cargoType;
+	@Column(nullable = false)
+	private Double totalAmount;
 
-	@Enumerated(EnumType.STRING)
-	private PayerType payer;
+	@Column(nullable = false)
+	private Double totalWeight;
 
-	@Enumerated(EnumType.STRING)
-	private ServiceType serviceType;
-
-	@JsonBackReference
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "sender_id", nullable = false)
-	private User sender;
-
-	// Physical characteristics
-	private Double weight;
-	private Double totalPrice;
-
-	// Receiver information
-	private String receiverName;
-	private String receiverPhone;
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "receiver_location_id")
-	private Location receiverLocation;
-
-	// Pickup details
-	@JsonBackReference
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "pickup_warehouse_id")
-	private Warehouse pickupWarehouse;
-
-	@Enumerated(EnumType.STRING)
-	private PickupTimeType pickupTime;
-
-	// Relationships
-	@JsonManagedReference
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<OrderProduct> orderProducts;
+	@JsonManagedReference
+	private List<OrderDetail> orderDetails;
 
-	// Tracking
-	@Column(nullable = true)
-	private LocalDateTime lastUpdated;
-	@Column(nullable = true)
-	private String lastUpdatedBy;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "delivery_id")
+	@JsonIgnoreProperties("order")
+	private Delivery delivery;
 
-	// Helper method to add product
-	public void addOrderProduct(OrderProduct orderProduct) {
-		if (orderProducts == null) {
-			orderProducts = new ArrayList<>();
-		}
-		orderProducts.add(orderProduct);
-		orderProduct.setOrder(this);
-	}
-
-	@Column(name = "created_at")
+	@Column(nullable = false)
 	private LocalDateTime createdAt;
 
+	@Column
+	private LocalDateTime lastUpdated;
+
 	@PrePersist
-	protected void onCreate() { createdAt = LocalDateTime.now(); }
+	protected void onCreate() {
+		createdAt = LocalDateTime.now();
+		orderCode = generateOrderCode();
+	}
+
+	@PreUpdate
+	protected void onUpdate() { lastUpdated = LocalDateTime.now(); }
+
+	// Simplified business methods
+	public void addOrderDetail(OrderDetail detail) {
+		if (orderDetails == null) {
+			orderDetails = new ArrayList<>();
+		}
+		orderDetails.add(detail);
+		detail.setOrder(this);
+		recalculateTotals();
+	}
+
+	private void recalculateTotals() {
+		this.totalAmount = orderDetails.stream()
+				.mapToDouble(detail -> detail.getPrice() * detail.getQuantity()).sum();
+		this.totalWeight = orderDetails.stream()
+				.mapToDouble(detail -> detail.getWeight() * detail.getQuantity()).sum();
+	}
 
 	public static String generateOrderCode() {
 		return "OD" + LocalDateTime.now()

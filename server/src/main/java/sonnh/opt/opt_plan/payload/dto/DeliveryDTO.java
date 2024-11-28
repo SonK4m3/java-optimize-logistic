@@ -4,11 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import sonnh.opt.opt_plan.constant.enums.*;
+import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.model.Delivery;
-
 import java.time.LocalDateTime;
 
+/**
+ * Data Transfer Object for Delivery entity.
+ * 
+ * @author Son Nguyen
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,16 +22,32 @@ public class DeliveryDTO {
 	private OrderDTO order;
 	private DeliveryStatus status;
 	private String deliveryNote;
-	private LocalDateTime deliveryDate;
+	private LocationDTO pickupLocation;
+	private Double estimatedDistance;
+	private LocalDateTime estimatedDeliveryTime;
+	private LocalDateTime actualDeliveryTime;
 	private DriverDTO driver;
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
 
+	/**
+	 * Maps a Delivery entity to a DeliveryDTO.
+	 * 
+	 * @param delivery the Delivery entity to map.
+	 * @return the mapped DeliveryDTO.
+	 */
 	public static DeliveryDTO fromEntity(Delivery delivery) {
 		if (delivery == null)
 			return null;
 		return DeliveryDTO.builder().id(delivery.getId()).status(delivery.getStatus())
-				.deliveryDate(delivery.getDeliveryDate())
+				.estimatedDistance(delivery.getEstimatedDistance())
+				.estimatedDeliveryTime(delivery.getEstimatedDeliveryTime())
+				.actualDeliveryTime(delivery.getActualDeliveryTime())
 				.order(OrderDTO.fromEntity(delivery.getOrder()))
 				.driver(DriverDTO.fromEntity(delivery.getDriver()))
-				.deliveryNote(delivery.getDeliveryNote()).build();
+				.pickupLocation(LocationDTO.fromEntity(delivery.getPickupLocation()))
+				.deliveryNote(delivery.getDeliveryNote())
+				.createdAt(delivery.getCreatedAt()).updatedAt(delivery.getUpdatedAt())
+				.build();
 	}
 }

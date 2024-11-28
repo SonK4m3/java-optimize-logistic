@@ -95,7 +95,8 @@ public class VehicleServiceImpl implements VehicleService {
 		Double currentLoad = activeRoutes.stream()
 				.flatMap(route -> route.getStops().stream())
 				.filter(stop -> stop.getStatus() == StopStatus.PENDING)
-				.mapToDouble(stop -> stop.getDelivery().getOrder().getWeight()).sum();
+				.mapToDouble(stop -> stop.getDelivery().getOrder().getTotalWeight())
+				.sum();
 
 		return (currentLoad / vehicle.getCapacity()) * 100;
 	}

@@ -1,7 +1,6 @@
 package sonnh.opt.opt_plan.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -19,13 +18,16 @@ public class Customer {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-	private List<CustomerAddress> addresses;
-
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;
 
-	@Size(max = 15)
+	@Column(name = "phone", nullable = true)
 	private String phone;
+
+	@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<CustomerAddress> addresses;
+
+	// @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+	// private List<PaymentMethod> paymentMethods;
 }

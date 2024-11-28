@@ -9,17 +9,7 @@ import java.util.Optional;
 public interface CustomerService {
 	Customer createCustomer(Customer customer);
 
-	Customer updateCustomer(Long userId, Customer customer);
-
-	void deleteCustomer(Long userId);
-
 	Optional<Customer> getCustomerByUserId(Long userId);
-
-	Optional<Customer> getCustomerByPhone(String phone);
-
-	Optional<Customer> getCustomerWithAddresses(Long customerId);
-
-	List<Customer> getAllCustomersWithAddresses();
 
 	CustomerAddress addAddress(Long customerId, CustomerAddress address);
 
@@ -28,4 +18,6 @@ public interface CustomerService {
 	Customer updateCustomerInfo(Long userId, CustomerUpdateRequest customerUpdateRequest);
 
 	List<Customer> getAllCustomers();
+
+	Optional<Customer> findById(Long id);
 }
