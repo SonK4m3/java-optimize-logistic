@@ -16,6 +16,8 @@ import sonnh.opt.opt_plan.service.InventoryService;
 import sonnh.opt.opt_plan.payload.request.InventoryCreateRequest;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Comparator;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,5 +124,46 @@ public class InventoryServiceImpl implements InventoryService {
 	@Override
 	public Boolean checkStockAvailability(Long productId, int quantity) {
 		return getTotalQuantityByProductId(productId) >= quantity;
+	}
+
+	@Override
+	@Transactional
+	public List<Inventory> getOutForOrder(Long productId, int quantity) {
+		List<Inventory> inventories = getInventoriesByProductId(productId);
+		List<Inventory> selectedInventories = new ArrayList<>();
+		int remainingQuantity = quantity;
+
+		// Sort inventories by quantity ascending to optimize stock usage
+		inventories.sort(Comparator.comparing(Inventory::getQuantity));
+
+		for (Inventory inventory : inventories) {
+			if (remainingQuantity <= 0) {
+				break;
+			}
+
+			int availableQuantity = inventory.getQuantity();
+			if (availableQuantity > 0) {
+				if (availableQuantity >= remainingQuantity) {
+					// This inventory can fulfill the remaining quantity
+					inventory.setQuantity(availableQuantity - remainingQuantity);
+					selectedInventories.add(inventory);
+					remainingQuantity = 0;
+				} else {
+					// Take what we can from this inventory and continue to next
+					inventory.setQuantity(0);
+					selectedInventories.add(inventory);
+					remainingQuantity -= availableQuantity;
+				}
+				inventoryRepository.save(inventory);
+			}
+		}
+
+		if (remainingQuantity > 0) {
+			throw new ResourceNotFoundException(
+					"Insufficient stock available for product id: " + productId
+							+ ". Missing quantity: " + remainingQuantity);
+		}
+
+		return selectedInventories;
 	}
 }

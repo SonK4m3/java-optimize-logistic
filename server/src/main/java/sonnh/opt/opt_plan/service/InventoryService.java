@@ -24,4 +24,6 @@ public interface InventoryService {
 	Integer getTotalQuantityByProductId(Long productId);
 
 	Boolean checkStockAvailability(Long productId, int quantity);
+
+	List<Inventory> getOutForOrder(Long productId, int quantity);
 }

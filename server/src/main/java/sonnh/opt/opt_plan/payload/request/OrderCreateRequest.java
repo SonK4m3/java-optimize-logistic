@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import sonnh.opt.opt_plan.constant.enums.OrderPriority;
+import sonnh.opt.opt_plan.constant.enums.DeliveryServiceType;
 
 import java.util.List;
 
@@ -12,6 +13,8 @@ public class OrderCreateRequest {
 	@NotNull
 	private Long customerId;
 
+	private Long customerLocationId;
+
 	@NotEmpty
 	private List<OrderItemRequest> items;
 
@@ -19,7 +22,7 @@ public class OrderCreateRequest {
 
 	private String deliveryNote;
 
-	private Long pickupLocationId;
+	private DeliveryServiceType deliveryServiceType;
 
 	@Data
 	public static class OrderItemRequest {
@@ -28,5 +31,12 @@ public class OrderCreateRequest {
 
 		@NotNull
 		private Integer quantity;
+	}
+
+	@Data
+	public static class LocationRequest {
+		private String address;
+		private Double latitude;
+		private Double longitude;
 	}
 }

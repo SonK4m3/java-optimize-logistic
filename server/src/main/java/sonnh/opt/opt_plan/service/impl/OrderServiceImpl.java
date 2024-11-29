@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import sonnh.opt.opt_plan.constant.enums.DeliveryServiceType;
 import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.constant.enums.OrderPriority;
 import sonnh.opt.opt_plan.constant.enums.OrderStatus;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 
 import sonnh.opt.opt_plan.service.InventoryService;
+import sonnh.opt.opt_plan.service.DeliveryFeeService;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderDetailRepository orderDetailRepository;
 	private final LocationRepository locationRepository;
 	private final InventoryService inventoryService;
+	private final DeliveryFeeService deliveryFeeService;
 
 	@Override
 	@Transactional
@@ -58,11 +61,11 @@ public class OrderServiceImpl implements OrderService {
 						"Customer not found with id: %d", orderRequest.getCustomerId())));
 
 		// Validate and get pickup location
-		Location pickupLocation = locationRepository
-				.findById(orderRequest.getPickupLocationId())
+		Location customerLocation = locationRepository
+				.findById(orderRequest.getCustomerLocationId())
 				.orElseThrow(() -> new ResourceNotFoundException(
 						String.format("Pickup location not found with id: %d",
-								orderRequest.getPickupLocationId())));
+								orderRequest.getCustomerLocationId())));
 
 		// Create initial order
 		Order order = createInitialOrder(customer, orderRequest.getPriority());
@@ -75,11 +78,32 @@ public class OrderServiceImpl implements OrderService {
 		double totalAmount = calculateTotalAmount(orderDetails);
 		double totalWeight = calculateTotalWeight(orderDetails);
 
-		// Create delivery
-		createDelivery(orderRequest.getDeliveryNote(), pickupLocation, order);
+		// Get out for order
+		List<Inventory> outForOrder = inventoryService.getOutForOrder(
+				orderRequest.getItems().get(0).getProductId(),
+				orderRequest.getItems().get(0).getQuantity());
 
+		List<Long> warehouseIds = outForOrder.stream().map(Inventory::getStorageLocation)
+				.map(StorageLocation::getStorageArea).map(StorageArea::getWarehouse)
+				.map(Warehouse::getId).distinct().toList();
+
+		// Create delivery with service type
+		Delivery delivery = createDelivery(orderRequest.getDeliveryNote(),
+				customerLocation, order, orderRequest.getDeliveryServiceType(),
+				warehouseIds);
+
+		// Calculate delivery fee
+		DeliveryFee deliveryFee = deliveryFeeService
+				.calculateAndSaveDeliveryFee(delivery);
+
+		// Update total amount to include delivery fee
+		totalAmount += deliveryFee.getTotalFee();
+
+		delivery.setDeliveryFee(deliveryFee);
+		delivery = deliveryRepository.save(delivery);
 		// Update and save final order
-		return updateAndSaveOrder(order, orderDetails, totalAmount, totalWeight);
+		return updateAndSaveOrder(order, delivery, orderDetails, totalAmount,
+				totalWeight);
 	}
 
 	private Order createInitialOrder(Customer customer, OrderPriority priority) {
@@ -124,18 +148,21 @@ public class OrderServiceImpl implements OrderService {
 		return orderDetails.stream().mapToDouble(OrderDetail::getWeight).sum();
 	}
 
-	private Delivery createDelivery(String deliveryNote, Location pickupLocation,
-			Order order) {
+	private Delivery createDelivery(String deliveryNote, Location customerLocation,
+			Order order, DeliveryServiceType serviceType, List<Long> warehouseIds) {
 		Delivery delivery = Delivery.builder().status(DeliveryStatus.PENDING)
-				.estimatedDistance(0.0).estimatedDeliveryTime(LocalDateTime.now())
-				.deliveryNote(deliveryNote).pickupLocation(pickupLocation).order(order)
-				.build();
+				.estimatedDistance(0.0)
+				.estimatedDeliveryTime(LocalDateTime.now().plusHours(2))
+				.deliveryNote(deliveryNote).pickupLocation(customerLocation).order(order)
+				.serviceType(serviceType).warehouseList(warehouseIds).build();
+
 		return deliveryRepository.save(delivery);
 	}
 
-	private Order updateAndSaveOrder(Order order, List<OrderDetail> orderDetails,
-			double totalAmount, double totalWeight) {
+	private Order updateAndSaveOrder(Order order, Delivery delivery,
+			List<OrderDetail> orderDetails, double totalAmount, double totalWeight) {
 		order.setOrderDetails(orderDetails);
+		order.setDelivery(delivery);
 		order.setTotalAmount(totalAmount);
 		order.setTotalWeight(totalWeight);
 		return orderRepository.save(order);

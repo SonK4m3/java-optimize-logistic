@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.model.Delivery;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Data Transfer Object for Delivery entity.
@@ -29,6 +30,7 @@ public class DeliveryDTO {
 	private DriverDTO driver;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private List<Long> warehouseList;
 
 	/**
 	 * Maps a Delivery entity to a DeliveryDTO.
@@ -47,6 +49,7 @@ public class DeliveryDTO {
 				.driver(DriverDTO.fromEntity(delivery.getDriver()))
 				.pickupLocation(LocationDTO.fromEntity(delivery.getPickupLocation()))
 				.deliveryNote(delivery.getDeliveryNote())
+				.warehouseList(delivery.getWarehouseList())
 				.createdAt(delivery.getCreatedAt()).updatedAt(delivery.getUpdatedAt())
 				.build();
 	}

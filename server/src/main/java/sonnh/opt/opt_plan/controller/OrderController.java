@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 
 import sonnh.opt.opt_plan.model.Order;
 import sonnh.opt.opt_plan.payload.ApiResponse;
-import sonnh.opt.opt_plan.payload.dto.DeliveryDTO;
 import sonnh.opt.opt_plan.payload.dto.OrderDTO;
 import sonnh.opt.opt_plan.payload.request.OrderCreateRequest;
 import sonnh.opt.opt_plan.payload.request.PageParams;
@@ -20,6 +19,7 @@ import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.service.OrderService;
 import sonnh.opt.opt_plan.constant.common.Api;
 import jakarta.validation.Valid;
+import sonnh.opt.opt_plan.payload.dto.OrderWithFee;
 
 @RestController
 @RequestMapping(Api.ORDER_ROUTE)
@@ -64,5 +64,35 @@ public class OrderController {
 		List<OrderDTO> orders = orderService.getAllOrders().stream()
 				.map(OrderDTO::fromEntity).toList();
 		return ResponseEntity.ok(ApiResponse.success(orders));
+	}
+
+	@Operation(summary = "Create a new order")
+	@PostMapping("/fee")
+	public ResponseEntity<ApiResponse<OrderWithFee>> createOrderWithFee(
+			@Valid @RequestBody OrderCreateRequest orderRequest) {
+		OrderWithFee createdOrder = OrderWithFee
+				.fromEntity(orderService.createOrder(orderRequest));
+		return ResponseEntity
+				.ok(ApiResponse.success("Order created successfully", createdOrder));
+	}
+
+	@Operation(summary = "Get orders by user")
+	@GetMapping("/user/fee")
+	public ResponseEntity<ApiResponse<PageResponse<OrderWithFee>>> getOrdersByUserWithFee(
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int limit,
+			@RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String sortDir) {
+
+		PageParams pageParams = new PageParams();
+		pageParams.setPage(page);
+		pageParams.setLimit(limit);
+		pageParams.setSortBy(sortBy);
+		pageParams.setSortDir(sortDir);
+
+		Page<Order> orders = orderService.getOrdersByUser(pageParams);
+		PageResponse<OrderWithFee> pageResponse = PageResponse.of(orders,
+				OrderWithFee::fromEntity);
+		return ResponseEntity.ok(ApiResponse.success(pageResponse));
 	}
 }
