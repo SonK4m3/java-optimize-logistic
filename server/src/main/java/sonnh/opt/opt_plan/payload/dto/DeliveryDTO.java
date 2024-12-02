@@ -8,6 +8,7 @@ import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.model.Delivery;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Data Transfer Object for Delivery entity.
@@ -20,10 +21,10 @@ import java.util.List;
 @AllArgsConstructor
 public class DeliveryDTO {
 	private Long id;
-	private OrderDTO order;
+	private OrderWithFee order;
 	private DeliveryStatus status;
 	private String deliveryNote;
-	private LocationDTO pickupLocation;
+	private LocationDTO deliveryLocation;
 	private Double estimatedDistance;
 	private LocalDateTime estimatedDeliveryTime;
 	private LocalDateTime actualDeliveryTime;
@@ -31,6 +32,7 @@ public class DeliveryDTO {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	private List<Long> warehouseList;
+	private List<DeliveryStatusHistoryDTO> statusHistory;
 
 	/**
 	 * Maps a Delivery entity to a DeliveryDTO.
@@ -41,15 +43,21 @@ public class DeliveryDTO {
 	public static DeliveryDTO fromEntity(Delivery delivery) {
 		if (delivery == null)
 			return null;
+
+		delivery.getOrder().setDelivery(null);
+
 		return DeliveryDTO.builder().id(delivery.getId()).status(delivery.getStatus())
 				.estimatedDistance(delivery.getEstimatedDistance())
 				.estimatedDeliveryTime(delivery.getEstimatedDeliveryTime())
 				.actualDeliveryTime(delivery.getActualDeliveryTime())
-				.order(OrderDTO.fromEntity(delivery.getOrder()))
+				.order(OrderWithFee.fromEntity(delivery.getOrder()))
 				.driver(DriverDTO.fromEntity(delivery.getDriver()))
-				.pickupLocation(LocationDTO.fromEntity(delivery.getPickupLocation()))
+				.deliveryLocation(LocationDTO.fromEntity(delivery.getDeliveryLocation()))
 				.deliveryNote(delivery.getDeliveryNote())
 				.warehouseList(delivery.getWarehouseList())
+				.statusHistory(delivery.getStatusHistory().stream()
+						.map(DeliveryStatusHistoryDTO::fromEntity)
+						.collect(Collectors.toList()))
 				.createdAt(delivery.getCreatedAt()).updatedAt(delivery.getUpdatedAt())
 				.build();
 	}

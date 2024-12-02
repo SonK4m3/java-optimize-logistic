@@ -5,21 +5,17 @@ import lombok.Data;
 
 @Data
 public class DriverCreateRequest {
-	@NotBlank(message = "Full name is required")
-	private String fullName;
+	private Long userId;
 
 	@NotBlank(message = "Phone number is required")
 	private String phone;
 
-	private String email;
+	@NotBlank(message = "License number is required")
 	private String licenseNumber;
+
+	@NotBlank(message = "Vehicle type is required")
 	private String vehicleType;
+
+	@NotBlank(message = "Vehicle plate number is required")
 	private String vehiclePlateNumber;
-	private Double vehicleCapacity;
-	private String workStartTime;
-	private String workEndTime;
-	private String preferredAreas;
-	private Double maxDeliveryRadius;
-	private Double baseRate;
-	private Double ratePerKm;
 }

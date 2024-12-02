@@ -1,23 +1,27 @@
 package sonnh.opt.opt_plan.service;
 
 import sonnh.opt.opt_plan.constant.enums.DriverStatus;
-import sonnh.opt.opt_plan.payload.dto.DriverDTO;
+import sonnh.opt.opt_plan.model.Driver;
 import sonnh.opt.opt_plan.payload.request.DriverCreateRequest;
+import sonnh.opt.opt_plan.payload.request.DriverCreateByManagerRequest;
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface DriverService {
-	DriverDTO createDriver(DriverCreateRequest request);
+	Driver createDriver(DriverCreateRequest request);
 
-	List<DriverDTO> getAllDrivers();
+	Driver createDriverByManager(DriverCreateByManagerRequest request);
 
-	List<DriverDTO> getDriversByStatus(DriverStatus status);
+	Page<Driver> getAllDrivers(int page, int size);
 
-	List<DriverDTO> getAvailableDriversNearby(Double latitude, Double longitude,
+	List<Driver> getDriversByStatus(DriverStatus status);
+
+	List<Driver> getAvailableDriversNearby(Double latitude, Double longitude,
 			Double radius);
 
-	List<DriverDTO> getDriversNearingEndOfShift(Integer minutes);
+	List<Driver> getDriversNearingEndOfShift(Integer minutes);
 
-	DriverDTO updateDriverLocation(Long id, Double latitude, Double longitude);
+	Driver updateDriverLocation(Long id, Double latitude, Double longitude);
 
-	DriverDTO updateDriverStatus(Long id, DriverStatus status);
+	Driver updateDriverStatus(Long id, DriverStatus status);
 }

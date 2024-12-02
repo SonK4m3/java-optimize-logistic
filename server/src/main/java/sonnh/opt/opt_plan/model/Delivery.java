@@ -6,10 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import java.util.List;
 import java.util.ArrayList;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.constant.enums.DeliveryServiceType;
 
 @Entity
@@ -36,9 +36,9 @@ public class Delivery {
 	private String deliveryNote;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "pickup_location_id")
+	@JoinColumn(name = "delivery_location_id")
 	@JsonIgnoreProperties("deliveries")
-	private Location pickupLocation;
+	private Location deliveryLocation;
 
 	@Column(nullable = false)
 	private Double estimatedDistance;
@@ -64,10 +64,6 @@ public class Delivery {
 	@Column
 	private LocalDateTime updatedAt;
 
-	@ElementCollection
-	@CollectionTable(name = "delivery_status_history", joinColumns = @JoinColumn(name = "delivery_id"))
-	private List<DeliveryStatusHistory> statusHistory;
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private DeliveryServiceType serviceType;
@@ -78,21 +74,14 @@ public class Delivery {
 	@Column(length = 500)
 	private List<Long> warehouseList;
 
+	@OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
+	private List<DeliveryStatusHistory> statusHistory = new ArrayList<>();
+
 	@PrePersist
 	protected void onCreate() {
 		createdAt = LocalDateTime.now();
 		status = DeliveryStatus.PENDING;
-	}
-
-	public void updateStatus(DeliveryStatus newStatus, String note) {
-		this.status = newStatus;
-		this.updatedAt = LocalDateTime.now();
-
-		if (statusHistory == null) {
-			statusHistory = new ArrayList<>();
-		}
-		statusHistory.add(DeliveryStatusHistory.builder().status(newStatus).note(note)
-				.timestamp(LocalDateTime.now()).build());
 	}
 
 	public DeliveryFee calculateDeliveryFee() {
@@ -136,5 +125,13 @@ public class Delivery {
 		}
 
 		return surcharge;
+	}
+
+	public void addStatusHistory(DeliveryStatusHistory history) {
+		if (statusHistory == null) {
+			statusHistory = new ArrayList<>();
+		}
+		history.setDelivery(this);
+		statusHistory.add(history);
 	}
 }

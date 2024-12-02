@@ -47,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
 	private final LocationRepository locationRepository;
 	private final InventoryService inventoryService;
 	private final DeliveryFeeService deliveryFeeService;
+	private final DeliveryStatusHistoryRepository deliveryStatusHistoryRepository;
 
 	@Override
 	@Transactional
@@ -150,12 +151,28 @@ public class OrderServiceImpl implements OrderService {
 
 	private Delivery createDelivery(String deliveryNote, Location customerLocation,
 			Order order, DeliveryServiceType serviceType, List<Long> warehouseIds) {
-		Delivery delivery = Delivery.builder().status(DeliveryStatus.PENDING)
-				.estimatedDistance(0.0)
+		// Create delivery
+		Delivery delivery = Delivery.builder().estimatedDistance(0.0)
 				.estimatedDeliveryTime(LocalDateTime.now().plusHours(2))
-				.deliveryNote(deliveryNote).pickupLocation(customerLocation).order(order)
-				.serviceType(serviceType).warehouseList(warehouseIds).build();
+				.deliveryNote(deliveryNote).deliveryLocation(customerLocation)
+				.order(order).serviceType(serviceType)
+				.warehouseList(new ArrayList<>(warehouseIds))
+				.status(DeliveryStatus.PENDING).createdAt(LocalDateTime.now())
+				.updatedAt(LocalDateTime.now()).build();
 
+		// Save delivery first
+		delivery = deliveryRepository.save(delivery);
+
+		// Create initial status history
+		DeliveryStatusHistory statusHistory = DeliveryStatusHistory.builder()
+				.delivery(delivery).location(customerLocation)
+				.status(DeliveryStatus.PENDING).note("Created by system")
+				.timestamp(LocalDateTime.now()).updatedBy("system").build();
+
+		// Add status history using the helper method
+		delivery.addStatusHistory(statusHistory);
+
+		// Save delivery again to persist the status history
 		return deliveryRepository.save(delivery);
 	}
 

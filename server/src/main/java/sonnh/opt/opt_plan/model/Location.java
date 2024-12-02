@@ -30,4 +30,9 @@ public class Location {
 	private double latitude;
 	@Column(nullable = false)
 	private double longitude;
+
+	public double getDistance(Location other) {
+		return Math.sqrt(Math.pow(latitude - other.latitude, 2)
+				+ Math.pow(longitude - other.longitude, 2));
+	}
 }

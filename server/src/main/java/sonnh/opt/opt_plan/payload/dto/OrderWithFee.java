@@ -23,7 +23,7 @@ public class OrderWithFee {
 	private Double totalAmount;
 	private Double totalWeight;
 
-	private Long customerId;
+	private CustomerDTO customer;
 	private LocalDateTime createdAt;
 	private LocalDateTime lastUpdated;
 
@@ -56,8 +56,8 @@ public class OrderWithFee {
 						.serviceType(delivery != null ? delivery.getServiceType() : null)
 						.build())
 				.totalAmount(order.getTotalAmount()).totalWeight(order.getTotalWeight())
-				.customerId(order.getCustomer().getId()).createdAt(order.getCreatedAt())
-				.lastUpdated(order.getLastUpdated())
+				.customer(CustomerDTO.fromEntity(order.getCustomer()))
+				.createdAt(order.getCreatedAt()).lastUpdated(order.getLastUpdated())
 				.delivery(DeliveryDTO.fromEntity(delivery)).build();
 	}
 }

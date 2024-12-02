@@ -1,64 +1,109 @@
 package sonnh.opt.opt_plan.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import sonnh.opt.opt_plan.constant.enums.DriverStatus;
 import sonnh.opt.opt_plan.constant.enums.VehicleType;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-
+/**
+ * Entity class representing a Driver in the system Handles driver information,
+ * location tracking, and rating management
+ */
 @Entity
 @Table(name = "drivers")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({
+		"hibernateLazyInitializer", "handler"
+})
 public class Driver {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false, unique = true)
-	private String driverCode;
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	private User user;
 
-	@NotBlank(message = "Full name is required")
-	@Column(nullable = false)
-	private String fullName;
-
-	@NotBlank(message = "Phone number is required")
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true, length = 15)
 	private String phone;
 
-	private String email;
+	@Column(nullable = false, length = 20)
 	private String licenseNumber;
-	private LocalDateTime licenseExpiryDate;
 
 	@Enumerated(EnumType.STRING)
-	private VehicleType type;
+	@Column(nullable = false)
+	private VehicleType vehicleType;
 
-	private String vehiclePlateNumber;
-	private Double vehicleCapacity;
+	@Column(nullable = false, length = 10)
+	private String vehiclePlate;
 
-	private LocalTime workStartTime;
-	private LocalTime workEndTime;
-	private String preferredAreas;
-	private Double maxDeliveryRadius;
-	private Double baseRate;
-	private Double ratePerKm;
-
-	// Current status and location
 	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private DriverStatus status;
 
 	private Double currentLatitude;
+
 	private Double currentLongitude;
+
+	@Column
 	private LocalDateTime lastLocationUpdate;
-	private boolean isActive;
-	private Integer maxWorkingHours;
-	private Integer remainingWorkingMinutes;
+
+	private Double rating;
+
+	@OneToMany(mappedBy = "driver", cascade = CascadeType.ALL)
+	@JsonIgnoreProperties("driver")
+	private List<Delivery> deliveries;
+
+	@Column(nullable = false, updatable = false)
+	private LocalDateTime createdAt;
+
+	@Column
+	private LocalDateTime lastUpdated;
+
+	@PrePersist
+	protected void onCreate() {
+		createdAt = LocalDateTime.now();
+		status = DriverStatus.AVAILABLE;
+		rating = 5.0;
+	}
+
+	@PreUpdate
+	protected void onUpdate() { lastUpdated = LocalDateTime.now(); }
+
+	/**
+	 * Updates driver's current location with timestamp
+	 * 
+	 * @param latitude  New latitude coordinate
+	 * @param longitude New longitude coordinate
+	 */
+	public void updateLocation(Double latitude, Double longitude) {
+		if (latitude == null || longitude == null) {
+			throw new IllegalArgumentException("Latitude and longitude cannot be null");
+		}
+		this.currentLatitude = latitude;
+		this.currentLongitude = longitude;
+		this.lastLocationUpdate = LocalDateTime.now();
+	}
+
+	/**
+	 * Updates driver's rating using weighted average
+	 * 
+	 * @param newRating New rating to be added (1.0 - 5.0)
+	 */
+	public void updateRating(Double newRating) {
+		if (newRating == null || newRating < 1.0 || newRating > 5.0) {
+			throw new IllegalArgumentException("Rating must be between 1.0 and 5.0");
+		}
+
+		this.rating = Objects.isNull(this.rating) ? newRating
+				: (this.rating + newRating) / 2;
+	}
 }

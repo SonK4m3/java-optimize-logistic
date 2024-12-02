@@ -1,9 +1,16 @@
 package sonnh.opt.opt_plan.model;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,36 +19,41 @@ import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 
 import java.time.LocalDateTime;
 
-@Embeddable
+@Entity
+@Table(name = "delivery_status_history")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeliveryStatusHistory {
-    
-    @Enumerated(EnumType.STRING)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_id", nullable = false)
+    private Delivery delivery;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = false)
+    private Location location;
+
     @Column(nullable = false)
+    @Enumerated(EnumType.ORDINAL)
     private DeliveryStatus status;
-    
+
     @Column(nullable = false)
     private LocalDateTime timestamp;
-    
-    @Column(length = 500)
+
     private String note;
-    
-    @Column(length = 50)
+
     private String updatedBy;
-    
-    @Column(nullable = false)
-    private String location;
-    
-    // Helper method to create a status change entry
-    public static DeliveryStatusHistory of(DeliveryStatus status, String note, String location) {
-        return DeliveryStatusHistory.builder()
-                .status(status)
-                .timestamp(LocalDateTime.now())
-                .note(note)
-                .location(location)
-                .build();
+
+    public void setDelivery(Delivery delivery) {
+        this.delivery = delivery;
+        if (delivery != null && !delivery.getStatusHistory().contains(this)) {
+            delivery.getStatusHistory().add(this);
+        }
     }
-} 
+}

@@ -28,5 +28,5 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
 	List<Delivery> findByStatusAndDriverIsNull(DeliveryStatus status);
 
-	List<Delivery> findByOrder(Order order);
+	Delivery findByOrder(Order order);
 }
