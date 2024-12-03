@@ -20,6 +20,8 @@ public class Api {
 	public static final String WAREHOUSE_ROUTE = API_BASE_URL + "/warehouses";
 	public static final String RESOURCE_ROUTE = API_BASE_URL + "/resources";
 	public static final String INVENTORY_ROUTE = API_BASE_URL + "/inventories";
+	public static final String DRIVER_DELIVERY_ROUTE = API_BASE_URL
+			+ "/driver-deliveries";
 	public static final String SUCCESS = "Operation successful";
 	public static final String ERROR = "Operation failed";
 	public static final String RESOURCE_NOT_FOUND = "Resource not found";

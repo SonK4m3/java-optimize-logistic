@@ -39,4 +39,6 @@ public interface WarehouseService {
 	 * @return DTO containing space utilization details
 	 */
 	WarehouseSpaceDTO checkWarehouseSpace(Long warehouseId);
+
+	List<Warehouse> getWarehousesOrThrow(List<Long> warehouseIds);
 }

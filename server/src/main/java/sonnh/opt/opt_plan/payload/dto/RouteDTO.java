@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -37,9 +36,6 @@ public class RouteDTO {
 				.vehicleName(
 						route.getVehicle() != null ? route.getVehicle().getVehicleCode()
 								: null)
-				.stops(route.getStops() != null ? route.getStops().stream()
-						.map(DeliveryStopDTO::fromEntity).collect(Collectors.toList())
-						: null)
 				.totalDistance(route.getTotalDistance()).totalCost(route.getTotalCost())
 				.status(route.getStatus()).build();
 	}

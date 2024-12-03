@@ -14,4 +14,6 @@ public interface OrderService {
 	List<Order> getAllOrders();
 
 	Page<Order> getOrdersByUser(PageParams pageParams);
+
+	Order getOrderById(Long orderId);
 }

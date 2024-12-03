@@ -1,4 +1,3 @@
-
 package sonnh.opt.opt_plan.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -7,18 +6,20 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+
 import sonnh.opt.opt_plan.constant.enums.DriverStatus;
 import sonnh.opt.opt_plan.payload.ApiResponse;
+import sonnh.opt.opt_plan.payload.response.PageResponse;
 import sonnh.opt.opt_plan.payload.dto.DriverDTO;
 import sonnh.opt.opt_plan.payload.request.DriverCreateRequest;
-import sonnh.opt.opt_plan.payload.response.PageResponse;
+import sonnh.opt.opt_plan.payload.request.DriverCreateByManagerRequest;
 import sonnh.opt.opt_plan.service.DriverService;
 import sonnh.opt.opt_plan.constant.common.Api;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.springframework.data.domain.Page;
 import sonnh.opt.opt_plan.model.Driver;
-import sonnh.opt.opt_plan.payload.request.DriverCreateByManagerRequest;
 import sonnh.opt.opt_plan.repository.UserRepository;
 
 @RestController
@@ -73,35 +74,6 @@ public class DriverController {
 				.ok(ApiResponse.success("Status updated successfully", driver));
 	}
 
-	@Operation(summary = "Get available drivers nearby")
-	@GetMapping("/nearby")
-	public ResponseEntity<ApiResponse<List<DriverDTO>>> getAvailableDriversNearby(
-			@RequestParam Double latitude, @RequestParam Double longitude,
-			@RequestParam Double radius) {
-		List<DriverDTO> drivers = driverService
-				.getAvailableDriversNearby(latitude, longitude, radius).stream()
-				.map(DriverDTO::fromEntity).collect(Collectors.toList());
-		return ResponseEntity.ok(ApiResponse.success(drivers));
-	}
-
-	@Operation(summary = "Get drivers by status")
-	@GetMapping("/status/{status}")
-	public ResponseEntity<ApiResponse<List<DriverDTO>>> getDriversByStatus(
-			@PathVariable DriverStatus status) {
-		List<DriverDTO> drivers = driverService.getDriversByStatus(status).stream()
-				.map(DriverDTO::fromEntity).collect(Collectors.toList());
-		return ResponseEntity.ok(ApiResponse.success(drivers));
-	}
-
-	@Operation(summary = "Get drivers nearing end of shift")
-	@GetMapping("/ending-shift")
-	public ResponseEntity<ApiResponse<List<DriverDTO>>> getDriversNearingEndOfShift(
-			@RequestParam(defaultValue = "30") Integer minutes) {
-		List<DriverDTO> drivers = driverService.getDriversNearingEndOfShift(minutes)
-				.stream().map(DriverDTO::fromEntity).collect(Collectors.toList());
-		return ResponseEntity.ok(ApiResponse.success(drivers));
-	}
-
 	@Operation(summary = "Get all drivers")
 	@GetMapping("/all")
 	public ResponseEntity<ApiResponse<PageResponse<DriverDTO>>> getAllDrivers(
@@ -111,5 +83,14 @@ public class DriverController {
 		PageResponse<DriverDTO> response = PageResponse.of(drivers,
 				DriverDTO::fromEntity);
 		return ResponseEntity.ok(ApiResponse.success(response));
+	}
+
+	@GetMapping("/available-drivers/{deliveryId}")
+	public ResponseEntity<ApiResponse<List<DriverDTO>>> getAvailableDriversForDelivery(
+			@PathVariable Long deliveryId) {
+		return ResponseEntity
+				.ok(ApiResponse.success("Available drivers fetched successfully",
+						driverService.getAvailableDriversForDelivery(deliveryId).stream()
+								.map(DriverDTO::fromEntity).toList()));
 	}
 }

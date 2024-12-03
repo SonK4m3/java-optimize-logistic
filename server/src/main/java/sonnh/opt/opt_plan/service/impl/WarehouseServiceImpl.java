@@ -348,4 +348,9 @@ public class WarehouseServiceImpl implements WarehouseService {
 
 		return warehouse.getTotalArea() - usedArea;
 	}
+
+	@Override
+	public List<Warehouse> getWarehousesOrThrow(List<Long> warehouseIds) {
+		return warehouseRepository.findAllById(warehouseIds);
+	}
 }

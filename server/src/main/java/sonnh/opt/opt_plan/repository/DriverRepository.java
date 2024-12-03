@@ -15,26 +15,6 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 
 	List<Driver> findByStatus(DriverStatus status);
 
-	@Query("""
-				SELECT d FROM Driver d
-				WHERE (6371 * acos(cos(radians(:latitude)) * cos(radians(d.currentLatitude)) *
-				cos(radians(d.currentLongitude) - radians(:longitude)) +
-				sin(radians(:latitude)) * sin(radians(d.currentLatitude)))) <= :radius
-				AND d.status = 'AVAILABLE'
-			""")
-	List<Driver> findAvailableDriversNearby(@Param("latitude") Double latitude,
-			@Param("longitude") Double longitude, @Param("radius") Double radius);
-
-	@Query("SELECT d FROM Driver d WHERE d.lastLocationUpdate <= :minutes AND d.status = 'BUSY'")
-	List<Driver> findDriversNearingEndOfShift(@Param("minutes") Integer minutes);
-
-	@Query("SELECT d FROM Driver d WHERE d.rating >= :minRating")
-	List<Driver> findDriversByMinimumRating(@Param("minRating") Double minRating);
-
-	@Query("SELECT d FROM Driver d WHERE d.vehicleType = :vehicleType AND d.status = 'AVAILABLE'")
-	List<Driver> findAvailableDriversByVehicleType(
-			@Param("vehicleType") VehicleType vehicleType);
-
 	@Query("SELECT d FROM Driver d WHERE d.user.id = :userId")
 	Driver findByUserId(@Param("userId") Long userId);
 

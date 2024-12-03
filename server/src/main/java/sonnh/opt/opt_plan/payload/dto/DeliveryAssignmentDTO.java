@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sonnh.opt.opt_plan.model.DeliveryAssignment;
-import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
+import sonnh.opt.opt_plan.constant.enums.DeliveryAssignmentStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class DeliveryAssignmentDTO {
 	private Long driverId;
 	private List<Long> warehouseIds;
 	private LocalDateTime assignedAt;
-	private DeliveryStatus status;
+	private DeliveryAssignmentStatus status;
 	private String rejectionReason;
 	private LocalDateTime respondedAt;
 	private LocalDateTime expiresAt;

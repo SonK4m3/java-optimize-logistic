@@ -4,50 +4,63 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.constant.enums.DriverStatus;
 import sonnh.opt.opt_plan.constant.enums.UserRole;
 import sonnh.opt.opt_plan.constant.enums.VehicleType;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
+import sonnh.opt.opt_plan.model.Delivery;
 import sonnh.opt.opt_plan.model.Driver;
 import sonnh.opt.opt_plan.model.User;
+import sonnh.opt.opt_plan.model.Warehouse;
+import sonnh.opt.opt_plan.model.Order;
+import sonnh.opt.opt_plan.model.Location;
 import sonnh.opt.opt_plan.payload.request.DriverCreateByManagerRequest;
 import sonnh.opt.opt_plan.payload.request.DriverCreateRequest;
 import sonnh.opt.opt_plan.repository.DriverRepository;
-import sonnh.opt.opt_plan.repository.UserRepository;
+import sonnh.opt.opt_plan.service.DeliveryService;
 import sonnh.opt.opt_plan.service.DriverService;
+import sonnh.opt.opt_plan.service.UserService;
+import sonnh.opt.opt_plan.service.OrderService;
+import sonnh.opt.opt_plan.service.WarehouseService;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class DriverServiceImpl implements DriverService {
+	private final double MAX_PICKUP_DISTANCE = 10.0;
+	private final double MAX_DELIVERY_DISTANCE = 50.0;
+
 	private final DriverRepository driverRepository;
-	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
+
+	private final UserService userService;
+	private final DeliveryService deliveryService;
+	private final OrderService orderService;
+	private final WarehouseService warehouseService;
 
 	@Override
 	@Transactional
 	public Driver createDriver(DriverCreateRequest request) {
 		// Find user by ID or throw exception if not found
-		User user = userRepository.findById(request.getUserId()).orElseThrow(
-				() -> new ResourceNotFoundException("User", "id", request.getUserId()));
+		User user = userService.getUserById(request.getUserId());
 
 		// Build driver entity with basic required fields from request
 		Driver driver = Driver.builder().user(user).phone(request.getPhone())
-				.licenseNumber(request.getLicenseNumber()).status(DriverStatus.OFF_DUTY)
+				.licenseNumber(request.getLicenseNumber())
 				.vehicleType(VehicleType.valueOf(request.getVehicleType()))
-				.vehiclePlate(request.getVehiclePlateNumber()).build();
+				.vehiclePlate(request.getVehiclePlateNumber()).currentLatitude(null)
+				.currentLongitude(null).build();
 
-		// Save driver to database
-		driver = driverRepository.save(driver);
-
-		// Convert to DTO and return
-		return driver;
+		return driverRepository.save(driver);
 	}
 
 	@Override
@@ -56,44 +69,32 @@ public class DriverServiceImpl implements DriverService {
 	}
 
 	@Override
-	public List<Driver> getDriversByStatus(DriverStatus status) {
-		return driverRepository.findByStatus(status);
+	@Transactional(readOnly = true)
+	public Driver getDriverOrThrow(Long id) {
+		return driverRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Driver", "id", id));
 	}
 
 	@Override
-	public List<Driver> getAvailableDriversNearby(Double latitude, Double longitude,
-			Double radius) {
-		return driverRepository.findAvailableDriversNearby(latitude, longitude, radius);
-	}
-
-	@Override
-	public List<Driver> getDriversNearingEndOfShift(Integer minutes) {
-		return driverRepository.findDriversNearingEndOfShift(minutes);
+	@Transactional(readOnly = true)
+	public List<Driver> getDriversOrThrow(List<Long> driverIds) {
+		return driverRepository.findAllById(driverIds);
 	}
 
 	@Override
 	@Transactional
 	public Driver updateDriverLocation(Long id, Double latitude, Double longitude) {
-		Driver driver = getDriverEntity(id);
-		driver.setCurrentLatitude(latitude);
-		driver.setCurrentLongitude(longitude);
-		driver.setLastLocationUpdate(LocalDateTime.now());
-		driver = driverRepository.save(driver);
-		return driver;
+		Driver driver = getDriverOrThrow(id);
+		driver.updateLocation(latitude, longitude);
+		return driverRepository.save(driver);
 	}
 
 	@Override
 	@Transactional
 	public Driver updateDriverStatus(Long id, DriverStatus status) {
-		Driver driver = getDriverEntity(id);
+		Driver driver = getDriverOrThrow(id);
 		driver.setStatus(status);
-		driver = driverRepository.save(driver);
-		return driver;
-	}
-
-	private Driver getDriverEntity(Long id) {
-		return driverRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Driver", "id", id));
+		return driverRepository.save(driver);
 	}
 
 	@Override
@@ -104,17 +105,54 @@ public class DriverServiceImpl implements DriverService {
 				.password(encoder.encode(request.getPassword())).role(UserRole.DRIVER)
 				.isActive(true).build();
 
-		user = userRepository.save(user);
+		user = userService.createUser(user);
 
 		Driver driver = Driver.builder().user(user).phone(request.getPhone())
 				.licenseNumber(request.getLicenseNumber())
 				.vehicleType(request.getVehicleType())
-				.vehiclePlate(request.getVehiclePlateNumber())
-				.status(DriverStatus.OFF_DUTY).currentLatitude(0.0).currentLongitude(0.0)
-				.build();
+				.vehiclePlate(request.getVehiclePlateNumber()).currentLatitude(0.0)
+				.currentLongitude(0.0).build();
 
-		driver = driverRepository.save(driver);
+		return driverRepository.save(driver);
+	}
 
-		return driver;
+	@Override
+	public List<Driver> getAvailableDrivers() {
+		return driverRepository.findByStatus(DriverStatus.READY_TO_ACCEPT_ORDERS);
+	}
+
+	@Override
+	public List<Driver> getAvailableDriversForDelivery(Long deliveryId) {
+		Delivery delivery = deliveryService.getDeliveryOrThrow(deliveryId);
+
+		Order order = orderService.getOrderById(delivery.getOrder().getId());
+
+		// Get order weight and delivery location
+		Double orderWeight = order.getTotalWeight();
+		Location deliveryLocation = delivery.getDeliveryLocation();
+
+		// Get vehicle type if driver is assigned
+		VehicleType vehicleType = VehicleType.getRequiredVehicleType(orderWeight);
+
+		// Get warehouses and handle not found efficiently
+		List<Warehouse> warehouses = warehouseService
+				.getWarehousesOrThrow(delivery.getWarehouseList());
+
+		return findAvailableDriversByVehicleType(vehicleType, deliveryLocation,
+				warehouses, MAX_PICKUP_DISTANCE, MAX_DELIVERY_DISTANCE);
+	}
+
+	private List<Driver> findAvailableDriversByVehicleType(VehicleType vehicleType,
+			Location deliveryLocation, List<Warehouse> warehouses,
+			double maxPickupDistance, double maxDeliveryDistance) {
+		List<Driver> drivers = driverRepository.findByStatusAndVehicleType(
+				DriverStatus.READY_TO_ACCEPT_ORDERS, vehicleType);
+
+		return drivers.stream()
+				.filter(driver -> driver.getCurrentLatitude() != null
+						&& driver.getCurrentLongitude() != null
+						&& driver.getCurrentLatitude() != 0.0
+						&& driver.getCurrentLongitude() != 0.0)
+				.collect(Collectors.toList());
 	}
 }

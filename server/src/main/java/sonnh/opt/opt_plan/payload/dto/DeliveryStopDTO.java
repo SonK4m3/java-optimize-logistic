@@ -2,6 +2,7 @@ package sonnh.opt.opt_plan.payload.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import sonnh.opt.opt_plan.constant.enums.DeliveryStopStatus;
 import sonnh.opt.opt_plan.model.DeliveryStop;
 import java.time.LocalDateTime;
 
@@ -9,22 +10,20 @@ import java.time.LocalDateTime;
 @Builder
 public class DeliveryStopDTO {
 	private Long id;
-	private Long routeId;
 	private Long deliveryId;
 	private Integer sequenceNumber;
 	private LocalDateTime plannedArrival;
-	private String status;
+	private DeliveryStopStatus status;
 
 	public static DeliveryStopDTO fromEntity(DeliveryStop stop) {
 		if (stop == null)
 			return null;
 
 		return DeliveryStopDTO.builder().id(stop.getId())
-				.routeId(stop.getRoute() != null ? stop.getRoute().getId() : null)
 				.deliveryId(
 						stop.getDelivery() != null ? stop.getDelivery().getId() : null)
 				.sequenceNumber(stop.getSequenceNumber())
-				.plannedArrival(stop.getPlannedArrival())
-				.status(stop.getStatus().toString()).build();
+				.plannedArrival(stop.getPlannedArrival()).status(stop.getStatus())
+				.build();
 	}
 }

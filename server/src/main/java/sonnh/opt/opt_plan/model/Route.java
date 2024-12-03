@@ -29,10 +29,6 @@ public class Route {
 	@JsonIgnore
 	private Vehicle vehicle;
 
-	@OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
-	@OrderBy("sequenceNumber")
-	private List<DeliveryStop> stops;
-
 	private Double totalDistance;
 	private Double totalCost;
 

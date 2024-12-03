@@ -12,10 +12,14 @@ import sonnh.opt.opt_plan.constant.enums.VehicleType;
 
 /**
  * Entity class representing a Driver in the system Handles driver information,
- * location tracking, and rating management
+ * location tracking, and rating management Optimized for performance and data
+ * integrity
  */
 @Entity
-@Table(name = "drivers")
+@Table(name = "drivers", indexes = {
+		@Index(name = "idx_driver_phone", columnList = "phone"),
+		@Index(name = "idx_driver_status", columnList = "status")
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -28,8 +32,8 @@ public class Driver {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	@OneToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
 	private User user;
 
 	@Column(nullable = false, unique = true, length = 15)
@@ -49,16 +53,19 @@ public class Driver {
 	@Column(nullable = false)
 	private DriverStatus status;
 
+	@Column(nullable = true)
 	private Double currentLatitude;
 
+	@Column(nullable = true)
 	private Double currentLongitude;
 
-	@Column
+	@Column(nullable = true)
 	private LocalDateTime lastLocationUpdate;
 
+	@Column(nullable = false)
 	private Double rating;
 
-	@OneToMany(mappedBy = "driver", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonIgnoreProperties("driver")
 	private List<Delivery> deliveries;
 
@@ -71,7 +78,7 @@ public class Driver {
 	@PrePersist
 	protected void onCreate() {
 		createdAt = LocalDateTime.now();
-		status = DriverStatus.AVAILABLE;
+		status = DriverStatus.READY_TO_ACCEPT_ORDERS;
 		rating = 5.0;
 	}
 
@@ -81,12 +88,16 @@ public class Driver {
 	/**
 	 * Updates driver's current location with timestamp
 	 * 
-	 * @param latitude  New latitude coordinate
-	 * @param longitude New longitude coordinate
+	 * @param latitude  New latitude coordinate (-90 to 90)
+	 * @param longitude New longitude coordinate (-180 to 180)
+	 * @throws IllegalArgumentException if coordinates are null or invalid
 	 */
 	public void updateLocation(Double latitude, Double longitude) {
 		if (latitude == null || longitude == null) {
 			throw new IllegalArgumentException("Latitude and longitude cannot be null");
+		}
+		if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+			throw new IllegalArgumentException("Invalid coordinates");
 		}
 		this.currentLatitude = latitude;
 		this.currentLongitude = longitude;
@@ -97,6 +108,7 @@ public class Driver {
 	 * Updates driver's rating using weighted average
 	 * 
 	 * @param newRating New rating to be added (1.0 - 5.0)
+	 * @throws IllegalArgumentException if rating is null or out of range
 	 */
 	public void updateRating(Double newRating) {
 		if (newRating == null || newRating < 1.0 || newRating > 5.0) {

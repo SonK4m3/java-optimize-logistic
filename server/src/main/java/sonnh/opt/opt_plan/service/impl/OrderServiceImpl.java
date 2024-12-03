@@ -47,7 +47,6 @@ public class OrderServiceImpl implements OrderService {
 	private final LocationRepository locationRepository;
 	private final InventoryService inventoryService;
 	private final DeliveryFeeService deliveryFeeService;
-	private final DeliveryStatusHistoryRepository deliveryStatusHistoryRepository;
 
 	@Override
 	@Transactional
@@ -204,5 +203,12 @@ public class OrderServiceImpl implements OrderService {
 				pageParams.getLimit(), sort);
 
 		return orderRepository.findOrdersByCustomerId(user.get().getId(), pageable);
+	}
+
+	@Override
+	public Order getOrderById(Long orderId) {
+		return orderRepository.findById(orderId)
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Order not found with id: " + orderId));
 	}
 }

@@ -3,9 +3,7 @@ package sonnh.opt.opt_plan.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.EnumType;
@@ -21,7 +19,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
+import sonnh.opt.opt_plan.constant.enums.DeliveryAssignmentStatus;
 
 @Entity
 @Table(name = "delivery_assignments")
@@ -49,7 +47,7 @@ public class DeliveryAssignment {
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
-	private DeliveryStatus status;
+	private DeliveryAssignmentStatus status;
 
 	@Column
 	private String rejectionReason;

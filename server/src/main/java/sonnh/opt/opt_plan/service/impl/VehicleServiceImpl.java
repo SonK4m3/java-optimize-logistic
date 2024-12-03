@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sonnh.opt.opt_plan.model.Route;
 import sonnh.opt.opt_plan.constant.enums.RouteStatus;
-import sonnh.opt.opt_plan.constant.enums.StopStatus;
 import sonnh.opt.opt_plan.model.Vehicle;
 import sonnh.opt.opt_plan.constant.enums.VehicleStatus;
 import sonnh.opt.opt_plan.repository.RouteRepository;
@@ -15,7 +14,7 @@ import sonnh.opt.opt_plan.service.VehicleService;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
 import sonnh.opt.opt_plan.payload.dto.VehicleDTO;
 import sonnh.opt.opt_plan.payload.request.VehicleRequest;
-
+import sonnh.opt.opt_plan.constant.enums.DeliveryStopStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -69,35 +68,5 @@ public class VehicleServiceImpl implements VehicleService {
 	@Transactional(readOnly = true)
 	public Optional<VehicleDTO> getVehicleById(Long id) {
 		return vehicleRepository.findById(id).map(VehicleDTO::fromEntity);
-	}
-
-	/**
-	 * Calculate vehicle utilization based on active routes and pending
-	 * deliveries
-	 * 
-	 * @param vehicleId Vehicle ID to check utilization
-	 * @return Utilization percentage (0-100)
-	 */
-	private Double calculateVehicleUtilization(Long vehicleId) {
-		Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
-		if (vehicleOpt.isEmpty()) {
-			return 0.0;
-		}
-
-		Vehicle vehicle = vehicleOpt.get();
-		List<Route> activeRoutes = routeRepository.findByVehicleAndStatus(vehicle,
-				RouteStatus.IN_PROGRESS);
-
-		if (activeRoutes.isEmpty()) {
-			return 0.0;
-		}
-
-		Double currentLoad = activeRoutes.stream()
-				.flatMap(route -> route.getStops().stream())
-				.filter(stop -> stop.getStatus() == StopStatus.PENDING)
-				.mapToDouble(stop -> stop.getDelivery().getOrder().getTotalWeight())
-				.sum();
-
-		return (currentLoad / vehicle.getCapacity()) * 100;
 	}
 }
