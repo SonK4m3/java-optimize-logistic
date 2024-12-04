@@ -24,9 +24,8 @@ public class ConsoleDisplay implements Display {
         solution.getVehicleList().forEach(vehicle -> {
             System.out.print("Vehicle " + vehicle.getId() + " : D" + vehicle.getDepot().getId() + " ");
             vehicle.getCustomerList().forEach(customer -> {
-                        System.out.print(customer.getId() + " ");
-                    }
-            );
+                System.out.print(customer.getId() + " ");
+            });
             System.out.println();
         });
         System.out.println("Total: " + String.format("%.2f", solution.calculateScore()));

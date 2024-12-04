@@ -11,6 +11,7 @@ import domain.VRPSolution;
 import domain.Vehicle;
 
 public class FileDisplay implements Display {
+    private final String FOLDER_PATH = "core/src/main/java/logs/";
     private String filePath;
 
     public FileDisplay(String filePath, boolean overwrite) {
@@ -21,7 +22,7 @@ public class FileDisplay implements Display {
     }
 
     private void clearFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FOLDER_PATH + filePath))) {
             // Clear the file by writing nothing
         } catch (IOException e) {
             e.printStackTrace();
@@ -29,7 +30,7 @@ public class FileDisplay implements Display {
     }
 
     private BufferedWriter getWriter() throws IOException {
-        return new BufferedWriter(new FileWriter(filePath, true));
+        return new BufferedWriter(new FileWriter(FOLDER_PATH + filePath, true));
     }
 
     @Override
@@ -37,7 +38,8 @@ public class FileDisplay implements Display {
         try (BufferedWriter writer = getWriter()) {
             for (Customer customer : customers) {
                 writer.write("Customer ID: " + customer.getId() + "\n");
-                writer.write("Location: (" + customer.getLocation().getX() + ", " + customer.getLocation().getY() + ")\n");
+                writer.write(
+                        "Location: (" + customer.getLocation().getX() + ", " + customer.getLocation().getY() + ")\n");
                 writer.write("Demand: " + customer.getDemand() + "\n");
                 writer.write("--------------------\n");
             }
@@ -62,8 +64,13 @@ public class FileDisplay implements Display {
     @Override
     public void displaySolution(VRPSolution solution) {
         try (BufferedWriter writer = getWriter()) {
+            if (solution == null) {
+                writer.write("Solution is null\n");
+                return;
+            }
             for (Vehicle vehicle : solution.getVehicleList()) {
-                writer.write("Vehicle " + vehicle.getId() + " : D" + vehicle.getDepot().getId() + " ");
+                Depot depot = vehicle.getDepot();
+                writer.write("Vehicle " + vehicle.getId() + (depot != null ? " : D" + depot.getId() : " : null") + " ");
                 for (Customer customer : vehicle.getCustomerList()) {
                     writer.write(customer.getId() + " ");
                 }
@@ -80,11 +87,13 @@ public class FileDisplay implements Display {
         try (BufferedWriter writer = getWriter()) {
             writer.write("--------------------\n");
             for (Depot depot : depots) {
-                writer.write("Depot ID: " + depot.getId() + " at (" + depot.getLocation().getX() + ", " + depot.getLocation().getY() + ")\n");
+                writer.write("Depot ID: " + depot.getId() + " at (" + depot.getLocation().getX() + ", "
+                        + depot.getLocation().getY() + ")\n");
             }
             writer.write("--------------------\n");
             for (Customer customer : customers) {
-                writer.write("Customer ID: " + customer.getId() + " at (" + customer.getLocation().getX() + ", " + customer.getLocation().getY() + ")\n");
+                writer.write("Customer ID: " + customer.getId() + " at (" + customer.getLocation().getX() + ", "
+                        + customer.getLocation().getY() + ")\n");
             }
             writer.write("--------------------\n");
             for (Vehicle vehicle : vehicles) {
@@ -104,5 +113,5 @@ public class FileDisplay implements Display {
             e.printStackTrace();
         }
     }
-    
+
 }
