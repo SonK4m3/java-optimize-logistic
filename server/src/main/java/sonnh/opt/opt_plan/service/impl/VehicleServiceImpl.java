@@ -4,17 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sonnh.opt.opt_plan.model.Route;
-import sonnh.opt.opt_plan.constant.enums.RouteStatus;
 import sonnh.opt.opt_plan.model.Vehicle;
 import sonnh.opt.opt_plan.constant.enums.VehicleStatus;
-import sonnh.opt.opt_plan.repository.RouteRepository;
 import sonnh.opt.opt_plan.repository.VehicleRepository;
 import sonnh.opt.opt_plan.service.VehicleService;
 import sonnh.opt.opt_plan.exception.ResourceNotFoundException;
 import sonnh.opt.opt_plan.payload.dto.VehicleDTO;
 import sonnh.opt.opt_plan.payload.request.VehicleRequest;
-import sonnh.opt.opt_plan.constant.enums.DeliveryStopStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,7 +20,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class VehicleServiceImpl implements VehicleService {
 	private final VehicleRepository vehicleRepository;
-	private final RouteRepository routeRepository;
 
 	@Override
 	@Transactional(readOnly = true)

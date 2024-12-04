@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.constant.enums.DriverStatus;
 import sonnh.opt.opt_plan.constant.enums.UserRole;
 import sonnh.opt.opt_plan.constant.enums.VehicleType;
@@ -24,7 +23,6 @@ import sonnh.opt.opt_plan.service.DriverService;
 import sonnh.opt.opt_plan.service.UserService;
 import sonnh.opt.opt_plan.service.OrderService;
 import sonnh.opt.opt_plan.service.WarehouseService;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 

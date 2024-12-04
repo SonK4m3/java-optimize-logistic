@@ -1,6 +1,5 @@
 package sonnh.opt.opt_plan.payload.request;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.validation.constraints.NotEmpty;

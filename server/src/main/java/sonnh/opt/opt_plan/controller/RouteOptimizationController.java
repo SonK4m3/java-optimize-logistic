@@ -30,7 +30,6 @@ import java.util.ArrayList;
 public class RouteOptimizationController {
 	private final RouteOptimizationService optimizationService;
 	private final VehicleService vehicleService;
-	private final DeliveryService deliveryService;
 
 	@Operation(summary = "Optimize delivery routes", description = "Optimizes routes for pending deliveries using available vehicles")
 	@PostMapping("/optimize")

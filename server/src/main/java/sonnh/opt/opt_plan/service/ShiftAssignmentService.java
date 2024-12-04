@@ -21,7 +21,6 @@ import sonnh.opt.opt_plan.repository.StaffRepository;
 import sonnh.opt.opt_plan.repository.WorkShiftRepository;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;

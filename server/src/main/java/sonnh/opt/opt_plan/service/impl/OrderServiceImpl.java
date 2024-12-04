@@ -46,7 +46,6 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderDetailRepository orderDetailRepository;
 	private final CustomerAddressRepository customerAddressRepository;
 
-	private final LocationRepository locationRepository;
 	private final InventoryService inventoryService;
 	private final DeliveryFeeService deliveryFeeService;
 

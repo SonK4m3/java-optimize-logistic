@@ -23,11 +23,9 @@ import sonnh.opt.opt_plan.model.StorageLocation;
 import sonnh.opt.opt_plan.model.Inventory;
 import sonnh.opt.opt_plan.model.Location;
 import sonnh.opt.opt_plan.model.Product;
-import sonnh.opt.opt_plan.payload.dto.InventoryDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseReceiptDTO;
 import sonnh.opt.opt_plan.payload.dto.WarehouseSpaceDTO;
-import sonnh.opt.opt_plan.payload.request.InventoryUpdateRequest;
 import sonnh.opt.opt_plan.payload.request.ReceiptCreateRequest;
 import sonnh.opt.opt_plan.payload.request.WarehouseCreateRequest;
 import sonnh.opt.opt_plan.payload.response.PageResponse;
@@ -336,17 +334,6 @@ public class WarehouseServiceImpl implements WarehouseService {
 				.stream().mapToInt(Inventory::getQuantity).sum();
 
 		return warehouse.getTotalCapacity() - usedCapacity;
-	}
-
-	private Double getAvailableArea(Warehouse warehouse) {
-		List<StorageArea> storageAreas = warehouse.getStorageAreas();
-		List<StorageLocation> storageLocations = storageAreas.stream()
-				.flatMap(area -> area.getStorageLocations().stream()).toList();
-
-		double usedArea = inventoryRepository.findByStorageLocationIn(storageLocations)
-				.stream().mapToDouble(Inventory::getQuantity).sum();
-
-		return warehouse.getTotalArea() - usedArea;
 	}
 
 	@Override

@@ -173,14 +173,6 @@ public class VRPServiceImpl implements VRPService {
 		}
 	}
 
-	private VRPRequest deserializeRequest(String json) {
-		try {
-			return objectMapper.readValue(json, VRPRequest.class);
-		} catch (Exception e) {
-			throw new RuntimeException("Error deserializing request", e);
-		}
-	}
-
 	private String serializeResult(VRPResultDTO result) {
 		try {
 			return objectMapper.writeValueAsString(result);

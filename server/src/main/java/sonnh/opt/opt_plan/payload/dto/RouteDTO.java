@@ -1,6 +1,5 @@
 package sonnh.opt.opt_plan.payload.dto;
 
-import sonnh.opt.opt_plan.payload.dto.DeliveryStopDTO;
 import sonnh.opt.opt_plan.model.Route;
 import sonnh.opt.opt_plan.constant.enums.RouteStatus;
 
