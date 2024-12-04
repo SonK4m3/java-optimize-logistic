@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
 public class Vehicle implements Cloneable {
     private final long id;
     private int capacity;
@@ -13,7 +18,15 @@ public class Vehicle implements Cloneable {
     public Vehicle(long id, int capacity) {
         this.id = id;
         this.capacity = capacity;
+        this.depot = null;
         this.customerList = new ArrayList<>();
+    }
+
+    public Vehicle(long id, int capacity, Depot depot, List<Customer> customerList) {
+        this.id = id;
+        this.capacity = capacity;
+        this.depot = depot;
+        this.customerList = customerList;
     }
 
     public long getId() {
@@ -92,8 +105,10 @@ public class Vehicle implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Vehicle)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Vehicle))
+            return false;
         Vehicle vehicle = (Vehicle) o;
         return id == vehicle.id;
     }

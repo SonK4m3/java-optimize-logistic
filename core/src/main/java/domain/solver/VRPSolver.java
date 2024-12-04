@@ -12,8 +12,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class VRPSolver implements TabuSearch<VRPSolution> {
-    private static final int MAX_ITERATION = 10000;
-    private static final int MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 10000;
+    private static final int MAX_ITERATION = 1000;
+    private static final int MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 1000;
     private final int tabuListSize;
     private final Queue<PlanningSolution> tabuList;
     private final Display display;

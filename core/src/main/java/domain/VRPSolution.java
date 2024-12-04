@@ -67,4 +67,32 @@ public class VRPSolution implements PlanningSolution, Cloneable {
     public List<Vehicle> getVehicleList() {
         return new ArrayList<>(vehicleList);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("VRP Solution: ");
+        sb.append("Score: ").append(calculateScore()).append(" ");
+
+        for (Vehicle vehicle : vehicleList) {
+            sb.append("Vehicle ").append(vehicle.getId()).append(": ");
+            sb.append("Capacity: ").append(vehicle.getCapacity()).append(" ");
+            sb.append("Route: ");
+            
+            if (vehicle.getCustomerList().isEmpty()) {
+                sb.append("Not used");
+            } else {
+                sb.append(vehicle.getCustomerList().get(0).getId()); // Assuming the first stop is always a depot
+                for (int i = 1; i < vehicle.getCustomerList().size(); i++) {
+                    sb.append(" -> ").append(vehicle.getCustomerList().get(i).getId());
+                }
+            }
+            
+            sb.append(" Total demand: ").append(vehicle.getCustomerList().size());
+            sb.append(" Remaining capacity: ").append(vehicle.getRemainingCapacity());
+            sb.append(" ");
+        }
+
+        return sb.toString().trim();
+    }
 }
