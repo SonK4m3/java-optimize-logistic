@@ -195,6 +195,10 @@ public class OrderServiceImpl implements OrderService {
 			throw new AuthenticationException("User not authenticated");
 		}
 
+		Customer customer = customerRepository.findByUser(user.get())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Customer not found with user id: " + user.get().getId()));
+
 		Sort sort = Sort
 				.by(pageParams.getSortDir().equalsIgnoreCase("desc") ? Sort.Direction.DESC
 						: Sort.Direction.ASC, pageParams.getSortBy());
@@ -202,13 +206,21 @@ public class OrderServiceImpl implements OrderService {
 		Pageable pageable = PageRequest.of(pageParams.getPage() - 1,
 				pageParams.getLimit(), sort);
 
-		return orderRepository.findOrdersByCustomerId(user.get().getId(), pageable);
+		return orderRepository.findOrdersByCustomerId(customer.getId(), pageable);
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Order getOrderById(Long orderId) {
 		return orderRepository.findById(orderId)
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Order not found with id: " + orderId));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Page<Order> getAllOrders(PageParams pageParams) {
+		return orderRepository.findAll(PageRequest.of(pageParams.getPage() - 1,
+				pageParams.getLimit(), Sort.by(Sort.Direction.DESC, "createdAt")));
 	}
 }

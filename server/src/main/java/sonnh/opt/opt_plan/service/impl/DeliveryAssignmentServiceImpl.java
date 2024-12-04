@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.constant.enums.DriverStatus;
 import sonnh.opt.opt_plan.constant.enums.DeliveryAssignmentStatus;
@@ -22,6 +23,7 @@ import sonnh.opt.opt_plan.repository.DriverRepository;
 import sonnh.opt.opt_plan.repository.DeliveryStatusHistoryRepository;
 import sonnh.opt.opt_plan.service.DeliveryAssignmentService;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService {
@@ -34,8 +36,12 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 	@Override
 	@Transactional
 	public DeliveryAssignment assignDeliveryToDriver(Long deliveryId, Long driverId) {
-		Delivery delivery = deliveryRepository.findById(deliveryId)
-				.orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
+		log.info("Attempting to assign delivery {} to driver {}", deliveryId, driverId);
+
+		Delivery delivery = deliveryRepository.findById(deliveryId).orElseThrow(() -> {
+			log.error("Delivery not found with id: {}", deliveryId);
+			return new ResourceNotFoundException("Delivery not found");
+		});
 
 		Driver driver = driverRepository.findById(driverId)
 				.orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
@@ -68,18 +74,26 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 				"Assigned to driver: " + driver.getId());
 
 		// Create assignment
+		log.debug("Creating new delivery assignment for delivery {} and driver {}",
+				deliveryId, driverId);
 		DeliveryAssignment assignment = DeliveryAssignment.builder().delivery(delivery)
 				.driver(driver).assignedAt(LocalDateTime.now())
 				.status(DeliveryAssignmentStatus.WAITING_FOR_DRIVER_ACCEPTANCE)
 				.expiresAt(LocalDateTime.now().plusMinutes(EXPIRATION_TIME_MINUTES))
 				.build();
 
-		return assignmentRepository.save(assignment);
+		DeliveryAssignment savedAssignment = assignmentRepository.save(assignment);
+		log.info("Successfully created delivery assignment with id: {}",
+				savedAssignment.getId());
+
+		return savedAssignment;
 	}
 
 	@Override
 	@Transactional
 	public DeliveryAssignment acceptDelivery(Long deliveryId, Long driverId) {
+		log.info("Driver {} attempting to accept delivery {}", driverId, deliveryId);
+
 		Delivery delivery = deliveryRepository.findById(deliveryId)
 				.orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
 
@@ -89,8 +103,17 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		DeliveryAssignment assignment = findActiveAssignment(deliveryId, driverId);
 
 		if (assignment.getExpiresAt().isBefore(LocalDateTime.now())) {
+			log.warn("Assignment expired for delivery {} and driver {}", deliveryId,
+					driverId);
 			throw new ResourceNotFoundException("Assignment has expired");
 		}
+
+		if (assignment
+				.getStatus() != DeliveryAssignmentStatus.WAITING_FOR_DRIVER_ACCEPTANCE) {
+			throw new BusinessException(
+					"Assignment is not waiting for driver acceptance");
+		}
+
 		delivery.setStatus(DeliveryStatus.DRIVER_ACCEPTED);
 		driver.setStatus(DriverStatus.DELIVERING);
 		// Update status history
@@ -103,6 +126,7 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		assignment.setStatus(DeliveryAssignmentStatus.DRIVER_ACCEPTED);
 		assignment.setRespondedAt(LocalDateTime.now());
 
+		log.info("Delivery {} successfully accepted by driver {}", deliveryId, driverId);
 		return assignmentRepository.save(assignment);
 	}
 
@@ -151,10 +175,15 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 	}
 
 	private DeliveryAssignment findActiveAssignment(Long deliveryId, Long driverId) {
+		log.debug("Finding active assignment for delivery {} and driver {}", deliveryId,
+				driverId);
+
 		List<DeliveryAssignment> assignments = assignmentRepository
 				.findByDeliveryIdAndDriverId(deliveryId, driverId);
 
 		if (assignments.isEmpty()) {
+			log.debug("No assignments found for delivery {} and driver {}", deliveryId,
+					driverId);
 			return null;
 		}
 
@@ -178,6 +207,8 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 
 	private void validateStatusTransition(DeliveryStatus currentStatus,
 			DeliveryStatus newStatus) {
+		log.debug("Validating status transition from {} to {}", currentStatus, newStatus);
+
 		if (currentStatus == newStatus) {
 			return; // Allow same status transition
 		}
@@ -195,6 +226,8 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		};
 
 		if (!isValidTransition) {
+			log.warn("Invalid status transition attempted from {} to {}", currentStatus,
+					newStatus);
 			throw new BusinessException(String.format(
 					"Invalid status transition from %s to %s", currentStatus, newStatus));
 		}

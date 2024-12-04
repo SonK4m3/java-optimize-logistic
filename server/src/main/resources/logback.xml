@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <!-- Define the log pattern -->
+    <property name="LOGS" value="./logs" />
+    <property name="LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n" />
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${LOG_PATTERN}</pattern>
+        </layout>
     </appender>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
     </root>
+
+    <!-- LOG "sonnh.opt.opt_plan*" at DEBUG level -->
+    <logger name="sonnh.opt.opt_plan" level="debug" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
 </configuration>

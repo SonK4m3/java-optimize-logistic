@@ -95,4 +95,22 @@ public class OrderController {
 				OrderWithFee::fromEntity);
 		return ResponseEntity.ok(ApiResponse.success(pageResponse));
 	}
+
+	@GetMapping("/fee")
+	public ResponseEntity<ApiResponse<PageResponse<OrderWithFee>>> getAllOrderWithFee(
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int limit,
+			@RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String sortDir) {
+		PageParams pageParams = new PageParams();
+		pageParams.setPage(page);
+		pageParams.setLimit(limit);
+		pageParams.setSortBy(sortBy);
+		pageParams.setSortDir(sortDir);
+
+		Page<Order> orders = orderService.getAllOrders(pageParams);
+		PageResponse<OrderWithFee> pageResponse = PageResponse.of(orders,
+				OrderWithFee::fromEntity);
+		return ResponseEntity.ok(ApiResponse.success(pageResponse));
+	}
 }
