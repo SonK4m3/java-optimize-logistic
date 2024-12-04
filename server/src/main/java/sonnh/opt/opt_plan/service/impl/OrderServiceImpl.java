@@ -44,6 +44,8 @@ public class OrderServiceImpl implements OrderService {
 	private final CustomerRepository customerRepository;
 	private final ProductRepository productRepository;
 	private final OrderDetailRepository orderDetailRepository;
+	private final CustomerAddressRepository customerAddressRepository;
+
 	private final LocationRepository locationRepository;
 	private final InventoryService inventoryService;
 	private final DeliveryFeeService deliveryFeeService;
@@ -61,11 +63,13 @@ public class OrderServiceImpl implements OrderService {
 						"Customer not found with id: %d", orderRequest.getCustomerId())));
 
 		// Validate and get pickup location
-		Location customerLocation = locationRepository
+		CustomerAddress customerAddress = customerAddressRepository
 				.findById(orderRequest.getCustomerLocationId())
 				.orElseThrow(() -> new ResourceNotFoundException(
 						String.format("Pickup location not found with id: %d",
 								orderRequest.getCustomerLocationId())));
+
+		Location customerLocation = customerAddress.getLocation();
 
 		// Create initial order
 		Order order = createInitialOrder(customer, orderRequest.getPriority());
@@ -78,11 +82,15 @@ public class OrderServiceImpl implements OrderService {
 		double totalAmount = calculateTotalAmount(orderDetails);
 		double totalWeight = calculateTotalWeight(orderDetails);
 
-		// Get out for order
-		List<Inventory> outForOrder = inventoryService.getOutForOrder(
-				orderRequest.getItems().get(0).getProductId(),
-				orderRequest.getItems().get(0).getQuantity());
+		// Get out for order for all items
+		List<Inventory> outForOrder = new ArrayList<>();
+		for (OrderItemRequest item : orderRequest.getItems()) {
+			List<Inventory> itemInventory = inventoryService
+					.getOutForOrder(item.getProductId(), item.getQuantity());
+			outForOrder.addAll(itemInventory);
+		}
 
+		// Get unique warehouse IDs from all inventory items
 		List<Long> warehouseIds = outForOrder.stream().map(Inventory::getStorageLocation)
 				.map(StorageLocation::getStorageArea).map(StorageArea::getWarehouse)
 				.map(Warehouse::getId).distinct().toList();

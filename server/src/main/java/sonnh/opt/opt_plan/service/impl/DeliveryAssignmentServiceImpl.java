@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import sonnh.opt.opt_plan.constant.enums.DeliveryStatus;
 import sonnh.opt.opt_plan.constant.enums.DriverStatus;
 import sonnh.opt.opt_plan.constant.enums.DeliveryAssignmentStatus;
@@ -23,7 +22,6 @@ import sonnh.opt.opt_plan.repository.DriverRepository;
 import sonnh.opt.opt_plan.repository.DeliveryStatusHistoryRepository;
 import sonnh.opt.opt_plan.service.DeliveryAssignmentService;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService {
@@ -36,22 +34,16 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 	@Override
 	@Transactional
 	public DeliveryAssignment assignDeliveryToDriver(Long deliveryId, Long driverId) {
-		log.info("Attempting to assign delivery {} to driver {}", deliveryId, driverId);
-
-		Delivery delivery = deliveryRepository.findById(deliveryId).orElseThrow(() -> {
-			log.error("Delivery not found with id: {}", deliveryId);
-			return new ResourceNotFoundException("Delivery not found");
-		});
+		Delivery delivery = deliveryRepository.findById(deliveryId)
+				.orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
 
 		Driver driver = driverRepository.findById(driverId)
 				.orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
 
-		// Validate driver availability
 		if (driver.getStatus() != DriverStatus.READY_TO_ACCEPT_ORDERS) {
 			throw new ResourceNotFoundException("Driver is not available");
 		}
 
-		// Check if there is any active assignment for this delivery and driver
 		DeliveryAssignment existingAssignment = assignmentRepository
 				.findByDeliveryIdAndDriverId(deliveryId, driverId).stream()
 				.filter(a -> a
@@ -65,7 +57,6 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 					"This delivery is already assigned to this driver and waiting for acceptance");
 		}
 
-		// Update delivery status
 		delivery.setStatus(DeliveryStatus.WAITING_FOR_DRIVER_ACCEPTANCE);
 		delivery.setDriver(driver);
 
@@ -73,27 +64,18 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		updateDeliveryStatus(delivery, DeliveryStatus.WAITING_FOR_DRIVER_ACCEPTANCE,
 				"Assigned to driver: " + driver.getId());
 
-		// Create assignment
-		log.debug("Creating new delivery assignment for delivery {} and driver {}",
-				deliveryId, driverId);
 		DeliveryAssignment assignment = DeliveryAssignment.builder().delivery(delivery)
 				.driver(driver).assignedAt(LocalDateTime.now())
 				.status(DeliveryAssignmentStatus.WAITING_FOR_DRIVER_ACCEPTANCE)
 				.expiresAt(LocalDateTime.now().plusMinutes(EXPIRATION_TIME_MINUTES))
 				.build();
 
-		DeliveryAssignment savedAssignment = assignmentRepository.save(assignment);
-		log.info("Successfully created delivery assignment with id: {}",
-				savedAssignment.getId());
-
-		return savedAssignment;
+		return assignmentRepository.save(assignment);
 	}
 
 	@Override
 	@Transactional
 	public DeliveryAssignment acceptDelivery(Long deliveryId, Long driverId) {
-		log.info("Driver {} attempting to accept delivery {}", driverId, deliveryId);
-
 		Delivery delivery = deliveryRepository.findById(deliveryId)
 				.orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
 
@@ -103,8 +85,6 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		DeliveryAssignment assignment = findActiveAssignment(deliveryId, driverId);
 
 		if (assignment.getExpiresAt().isBefore(LocalDateTime.now())) {
-			log.warn("Assignment expired for delivery {} and driver {}", deliveryId,
-					driverId);
 			throw new ResourceNotFoundException("Assignment has expired");
 		}
 
@@ -116,7 +96,6 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 
 		delivery.setStatus(DeliveryStatus.DRIVER_ACCEPTED);
 		driver.setStatus(DriverStatus.DELIVERING);
-		// Update status history
 		updateDeliveryStatus(delivery, DeliveryStatus.DRIVER_ACCEPTED,
 				"Accepted by driver: " + driverId);
 
@@ -126,7 +105,6 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		assignment.setStatus(DeliveryAssignmentStatus.DRIVER_ACCEPTED);
 		assignment.setRespondedAt(LocalDateTime.now());
 
-		log.info("Delivery {} successfully accepted by driver {}", deliveryId, driverId);
 		return assignmentRepository.save(assignment);
 	}
 
@@ -140,10 +118,9 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		assignment.setRespondedAt(LocalDateTime.now());
 
 		Delivery delivery = assignment.getDelivery();
-		delivery.setStatus(DeliveryStatus.PENDING); // Reset to pending
+		delivery.setStatus(DeliveryStatus.PENDING);
 		delivery.setDriver(null);
 
-		// Update status history
 		updateDeliveryStatus(delivery, DeliveryStatus.CANCELLED,
 				"Rejected by driver: " + driverId + ". Reason: " + reason);
 
@@ -175,15 +152,10 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 	}
 
 	private DeliveryAssignment findActiveAssignment(Long deliveryId, Long driverId) {
-		log.debug("Finding active assignment for delivery {} and driver {}", deliveryId,
-				driverId);
-
 		List<DeliveryAssignment> assignments = assignmentRepository
 				.findByDeliveryIdAndDriverId(deliveryId, driverId);
 
 		if (assignments.isEmpty()) {
-			log.debug("No assignments found for delivery {} and driver {}", deliveryId,
-					driverId);
 			return null;
 		}
 
@@ -207,10 +179,8 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 
 	private void validateStatusTransition(DeliveryStatus currentStatus,
 			DeliveryStatus newStatus) {
-		log.debug("Validating status transition from {} to {}", currentStatus, newStatus);
-
 		if (currentStatus == newStatus) {
-			return; // Allow same status transition
+			return;
 		}
 
 		boolean isValidTransition = switch (currentStatus) {
@@ -221,13 +191,11 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 				|| newStatus == DeliveryStatus.CANCELLED;
 		case IN_TRANSIT -> newStatus == DeliveryStatus.DELIVERED
 				|| newStatus == DeliveryStatus.CANCELLED;
-		case DELIVERED -> false; // Terminal state
-		case CANCELLED -> false; // Terminal state
+		case DELIVERED -> false;
+		case CANCELLED -> false;
 		};
 
 		if (!isValidTransition) {
-			log.warn("Invalid status transition attempted from {} to {}", currentStatus,
-					newStatus);
 			throw new BusinessException(String.format(
 					"Invalid status transition from %s to %s", currentStatus, newStatus));
 		}
@@ -247,9 +215,6 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 			throw new ResourceNotFoundException("Driver is not available");
 		}
 
-		// Check if waiting for driver acceptance assignment already exists for
-		// this
-		// delivery and driver
 		boolean existingAssignment = assignmentRepository
 				.findByDeliveryIdAndDriverId(request.getDeliveryId(),
 						request.getDriverId())
@@ -298,7 +263,17 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Delivery assignment not found"));
 
-		Delivery delivery = assignment.getDelivery();
+		Delivery delivery = deliveryRepository.findById(assignment.getDelivery().getId())
+				.orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
+
+		if (delivery.getStatus() == DeliveryStatus.DELIVERED) {
+			Driver driver = assignment.getDriver();
+			driver.setStatus(DriverStatus.READY_TO_ACCEPT_ORDERS);
+			driver = driverRepository.save(driver);
+
+			assignment.setStatus(DeliveryAssignmentStatus.EXPIRED);
+			return assignmentRepository.save(assignment);
+		}
 
 		if (delivery.getStatus() != DeliveryStatus.DRIVER_ACCEPTED) {
 			throw new BusinessException("Delivery is not accepted by driver");
@@ -342,14 +317,20 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 		List<DeliveryAssignment> assignments = assignmentRepository
 				.findByDriverId(driverId);
 
-		// First update expired assignments
 		List<DeliveryAssignment> expiredAssignments = assignments.stream().filter(a -> a
 				.getStatus() == DeliveryAssignmentStatus.WAITING_FOR_DRIVER_ACCEPTANCE)
-				.filter(a -> a.getExpiresAt() != null
-						&& a.getExpiresAt().isBefore(LocalDateTime.now()))
-				.toList();
+				.filter(a -> {
+					boolean isExpiredByTime = a.getExpiresAt() != null
+							&& a.getExpiresAt().isBefore(LocalDateTime.now());
 
-		// Update expired assignments in a batch
+					Delivery delivery = a.getDelivery();
+					boolean isAcceptedByOther = delivery.getDriver() != null
+							&& !delivery.getDriver().getId().equals(driverId)
+							&& delivery.getStatus() == DeliveryStatus.DRIVER_ACCEPTED;
+
+					return isExpiredByTime || isAcceptedByOther;
+				}).toList();
+
 		if (!expiredAssignments.isEmpty()) {
 			expiredAssignments.forEach(assignment -> {
 				assignment.setStatus(DeliveryAssignmentStatus.EXPIRED);
@@ -357,10 +338,8 @@ public class DeliveryAssignmentServiceImpl implements DeliveryAssignmentService 
 			assignmentRepository.saveAll(expiredAssignments);
 		}
 
-		// Refresh the assignments list after updating expired ones
 		assignments = assignmentRepository.findByDriverId(driverId);
 
-		// Return first non-expired assignment
 		return assignments.stream()
 				.filter(a -> a.getStatus() != DeliveryAssignmentStatus.EXPIRED)
 				.findFirst().orElse(null);
