@@ -1,6 +1,5 @@
 package domain.solver;
 
-import api.algorithm.ACOAlgorithm;
 import domain.*;
 import domain.display.Display;
 import domain.display.DisplayFactory;
@@ -9,7 +8,9 @@ import domain.geo.EuclideanDistanceCalculator;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
+import api.algorithm.implement.ACOAlgorithm;
+
+public class VRPACOAlgorithm {
     private double[][] pheromones;
     private double[][] distances;
     private List<Customer> customers;
@@ -29,7 +30,6 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         setParameters(1000, 100, 1.5, 2.0, 0.3, 1.5);
     }
 
-    @Override
     public void setParameters(int maxIterations, int antCount, double alpha, double beta, double evaporationRate,
             double q) {
         this.maxIterations = maxIterations;
@@ -40,8 +40,7 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         this.q = q;
     }
 
-    @Override
-    public VRPSolution solve(VRPSolution initialSolution) {
+    public VRPSolution execute(VRPSolution initialSolution) {
         this.customers = initialSolution.getCustomerList();
         this.vehicles = initialSolution.getVehicleList();
         this.depots = initialSolution.getDepotList();
@@ -76,7 +75,6 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         return bestSolution;
     }
 
-    @Override
     public void initializePheromones() {
         for (int i = 0; i < pheromones.length; i++) {
             Arrays.fill(pheromones[i], 0.1);
@@ -97,7 +95,6 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         }
     }
 
-    @Override
     public List<VRPSolution> constructSolutions() {
         List<VRPSolution> solutions = new ArrayList<>();
         for (int i = 0; i < antCount; i++) {
@@ -106,7 +103,6 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         return solutions;
     }
 
-    @Override
     public VRPSolution constructSolution() {
         VRPSolution solution = new VRPSolution(depots, new ArrayList<>(customers), new ArrayList<>(vehicles));
         List<Customer> unvisitedCustomers = new ArrayList<>(customers);
@@ -141,7 +137,6 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         return solution;
     }
 
-    @Override
     public void updatePheromones(List<VRPSolution> solutions) {
         for (VRPSolution solution : solutions) {
             double score = solution.calculateScore();
@@ -161,7 +156,6 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         }
     }
 
-    @Override
     public void evaporatePheromones() {
         for (int i = 0; i < pheromones.length; i++) {
             for (int j = 0; j < pheromones[i].length; j++) {
@@ -170,14 +164,12 @@ public class VRPACOAlgorithm implements ACOAlgorithm<VRPSolution> {
         }
     }
 
-    @Override
     public double calculateProbability(int from, int to) {
         double pheromone = Math.pow(pheromones[from][to], alpha);
         double distance = Math.pow(1.0 / distances[from][to], beta);
         return pheromone * distance;
     }
 
-    @Override
     public int selectNextNode(int currentNode, List<Integer> unvisitedNodes) {
         if (unvisitedNodes.isEmpty())
             return -1;

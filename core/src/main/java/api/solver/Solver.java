@@ -2,31 +2,59 @@ package api.solver;
 
 import api.algorithm.PlanningAlgorithm;
 import api.solution.PlanningSolution;
+import domain.solver.EVRPAlgorithm;
+import api.algorithm.AlgorithmFactory;
 
-public class Solver<Solution_ extends PlanningSolution> {
-    private PlanningAlgorithm<Solution_> algorithm;
+public abstract class Solver<S extends PlanningSolution> {
+    private static final EVRPAlgorithm DEFAULT_ALGORITHM = EVRPAlgorithm.TABU;
+    protected PlanningAlgorithm<S> algorithm;
+    protected S initialSolution;
+    protected S currentSolution;
+    protected S optimalSolution;
 
-    public Solver() {
+    protected Solver() {
         this.algorithm = null;
+        this.initialSolution = this.createInitialSolution();
+
+        useAlgorithm(DEFAULT_ALGORITHM);
     }
 
-    public Solver(PlanningAlgorithm<Solution_> algorithm) {
+    protected Solver(PlanningAlgorithm<S> algorithm) {
         this.algorithm = algorithm;
+        this.initialSolution = this.createInitialSolution();
     }
 
-    public Solution_ solve(Solution_ newSolution) {
-        if(newSolution == null) {
-            throw new IllegalArgumentException("New solution cannot be null");
+    public S solve(S initialSolution) {
+        validateInputs(initialSolution);
+
+        this.currentSolution = initialSolution;
+        this.optimalSolution = algorithm.execute(initialSolution);
+
+        return this.optimalSolution;
+    }
+
+    public void useAlgorithm(EVRPAlgorithm algorithm) {
+        PlanningAlgorithm<S> planningAlgorithm = AlgorithmFactory.getAlgorithm(algorithm);
+        this.algorithm = planningAlgorithm;
+    }
+
+    public S getCurrentSolution() {
+        return this.currentSolution;
+    }
+
+    public S getOptimalSolution() {
+        return this.optimalSolution;
+    }
+
+    protected void validateInputs(S solution) {
+        if (solution == null) {
+            throw new IllegalArgumentException("Solution cannot be null");
         }
 
-        if(algorithm == null) {
-            throw new IllegalArgumentException("Algorithm cannot be null");
+        if (algorithm == null) {
+            throw new IllegalArgumentException("Algorithm must be set before solving");
         }
-
-        return algorithm.solve(newSolution);
     }
 
-    public void setAlgorithm(PlanningAlgorithm<Solution_> algorithm) {
-        this.algorithm = algorithm;
-    }
+    abstract public S createInitialSolution();
 }

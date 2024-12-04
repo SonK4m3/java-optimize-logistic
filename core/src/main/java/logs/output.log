@@ -108,3 +108,31 @@ Execution time: 2.987299 seconds
 Using Tabu Search Algorithm
 Score: 6633161.091929711
 Execution time: 47.011634 seconds
+
+Using Tabu Search Algorithm
+Score: 6633161.091929711
+Execution time: 42.362259 seconds
+
+Using Tabu Search Algorithm
+Score: 0.0
+Execution time: 0.299916 seconds
+
+Using Tabu Search Algorithm
+Score: 0.0
+Execution time: 1.717971 seconds
+
+Using Tabu Search Algorithm
+Score: 0.0
+Execution time: 1.828870 seconds
+
+Using Greed Algorithm
+Score: 0.0
+Execution time: 0.128447 seconds
+
+Using Tabu Algorithm
+Score: 0.0
+Execution time: 1.794395 seconds
+
+Using Tabu Algorithm
+Score: 8853466.257801672
+Execution time: 1.891154 seconds

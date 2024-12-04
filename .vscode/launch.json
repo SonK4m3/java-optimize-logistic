@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Main",
+      "request": "launch",
+      "mainClass": "Main",
+      "projectName": "core"
+    },
+    {
+      "type": "java",
+      "name": "OptPlanApplication",
+      "request": "launch",
+      "mainClass": "sonnh.opt.opt_plan.OptPlanApplication",
+      "projectName": "opt-plan"
+    },
+    {
+      "type": "java",
+      "name": "Debug Spring Boot",
+      "request": "launch",
+      "mainClass": "${workspaceFolder}/src/main/java/sonnh/opt/opt_plan/OptPlanApplication.java",
+      "projectName": "opt-plan",
+      "env": {
+        "SPRING_DEVTOOLS_RESTART_ENABLED": "true"
+      }
+    }
+  ]
+}

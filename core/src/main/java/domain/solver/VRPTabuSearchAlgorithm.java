@@ -1,6 +1,5 @@
 package domain.solver;
 
-import api.algorithm.TabuSearchAlgorithm;
 import api.solution.PlanningSolution;
 import domain.Customer;
 import domain.Depot;
@@ -12,7 +11,7 @@ import domain.display.DisplayFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VRPTabuSearchAlgorithm implements TabuSearchAlgorithm<VRPSolution> {
+public class VRPTabuSearchAlgorithm {
     private static final int MAX_ITERATION = 1000000;
     private static final int MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100000;
     private final int tabuListSize;
@@ -25,8 +24,7 @@ public class VRPTabuSearchAlgorithm implements TabuSearchAlgorithm<VRPSolution> 
         this.display = DisplayFactory.getDisplay(DisplayFactory.DisplayType.FILE, "core/src/main/java/logs/output.log");
     }
 
-    @Override
-    public VRPSolution solve(VRPSolution newSolution) {
+    public VRPSolution execute(VRPSolution newSolution) {
         VRPSolution initialSolution = this.initialSolution(newSolution);
         VRPSolution currentSolution = initialSolution.clone();
         VRPSolution bestSolution = initialSolution.clone();
@@ -58,7 +56,6 @@ public class VRPTabuSearchAlgorithm implements TabuSearchAlgorithm<VRPSolution> 
         return bestSolution;
     }
 
-    @Override
     public VRPSolution initialSolution(VRPSolution solution) {
         Map<Depot, List<Customer>> depotCustomers = assignCustomersToDepots(solution.getDepotList(),
                 solution.getCustomerList());
@@ -97,7 +94,6 @@ public class VRPTabuSearchAlgorithm implements TabuSearchAlgorithm<VRPSolution> 
         return solution;
     }
 
-    @Override
     public List<VRPSolution> generateNeighbors(VRPSolution currentSolution) {
         List<VRPSolution> neighbors = new ArrayList<>();
         neighbors.addAll(generateIntraRouteSwaps(currentSolution));
@@ -241,57 +237,5 @@ public class VRPTabuSearchAlgorithm implements TabuSearchAlgorithm<VRPSolution> 
             return true;
         }
         return false;
-    }
-
-    /**
-     * Assigns customers to their nearest depot
-     */
-    private Map<Depot, List<Customer>> assignCustomersToDepots(List<Depot> depots, List<Customer> customers) {
-        Map<Depot, List<Customer>> result = depots.stream()
-                .collect(Collectors.toMap(depot -> depot, depot -> new ArrayList<>()));
-
-        for (Customer customer : customers) {
-            Depot nearestDepot = findNearestDepot(customer, depots);
-            result.get(nearestDepot).add(customer);
-        }
-
-        return result;
-    }
-
-    /**
-     * Finds the nearest depot for a given customer
-     */
-    private Depot findNearestDepot(Customer customer, List<Depot> depots) {
-        return depots.stream()
-                .min(Comparator.comparingDouble(depot -> customer.getLocation().getDistanceTo(depot.getLocation())))
-                .orElseThrow(() -> new RuntimeException("No depot found"));
-    }
-
-    /**
-     * Assigns vehicles to depots based on capacity and demand
-     */
-    private void assignVehiclesToDepots(List<Vehicle> vehicles, List<Depot> depots,
-        Map<Depot, List<Customer>> depotCustomers) {
-        Map<Depot, Integer> depotTotalDemand = calculateDepotTotalDemand(depotCustomers);
-
-        for (Vehicle vehicle : vehicles) {
-            Depot bestDepot = depots.stream()
-                    .min(Comparator.comparingInt(
-                            depot -> Math.abs(vehicle.getCapacity() - depotTotalDemand.getOrDefault(depot, 0))))
-                    .orElse(depots.get(0));
-
-            vehicle.setDepot(bestDepot);
-            depotTotalDemand.put(bestDepot, depotTotalDemand.getOrDefault(bestDepot, 0) - vehicle.getCapacity());
-        }
-    }
-
-    /**
-     * Calculates the total demand for each depot based on assigned customers
-     */
-    private Map<Depot, Integer> calculateDepotTotalDemand(Map<Depot, List<Customer>> depotCustomers) {
-        return depotCustomers.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().stream().mapToInt(Customer::getDemand).sum()));
     }
 }

@@ -6,14 +6,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import api.algorithm.GreedAlgorithm;
 import api.solution.ProblemFactCollectionProperty;
 
-public class VRPGreedAlgorithm implements GreedAlgorithm<VRPSolution> {
+public class VRPGreedAlgorithm {
     Set<Customer> unvisitedCustomers = new HashSet<>();
 
-    @Override
-    public VRPSolution solve(VRPSolution newSolution) {
+    public VRPSolution execute(VRPSolution newSolution) {
         List<Vehicle> vehicles = newSolution.getVehicleList();
         List<Customer> customers = newSolution.getCustomerList();
         unvisitedCustomers.addAll(customers);
@@ -22,7 +20,8 @@ public class VRPGreedAlgorithm implements GreedAlgorithm<VRPSolution> {
             Location currentLocation = vehicle.getDepot().getLocation();
             while (!unvisitedCustomers.isEmpty() && vehicle.getRemainingCapacity() > 0) {
                 Customer nearestCustomer = this.greedRangeValue(currentLocation, unvisitedCustomers);
-                if (nearestCustomer == null || !vehicle.canAddCustomer(nearestCustomer)) break;
+                if (nearestCustomer == null || !vehicle.canAddCustomer(nearestCustomer))
+                    break;
                 vehicle.addCustomer(nearestCustomer);
                 unvisitedCustomers.remove(nearestCustomer);
                 currentLocation = nearestCustomer.getLocation();
@@ -47,7 +46,6 @@ public class VRPGreedAlgorithm implements GreedAlgorithm<VRPSolution> {
         return nearestCustomer;
     }
 
-    @Override
     public ProblemFactCollectionProperty greedRangeValue() {
         // This method is not used in the current implementation
         return null;

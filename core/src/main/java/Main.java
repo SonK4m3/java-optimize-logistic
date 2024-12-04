@@ -1,7 +1,7 @@
 import domain.*;
 import domain.display.Display;
 import domain.solver.EVRPAlgorithm;
-import domain.solver.VRPSolver;
+import api.solver.Solver;
 import domain.time.PerformanceMeter;
 import domain.display.DisplayFactory;
 import domain.seed.VRPSeeding;
@@ -21,27 +21,36 @@ public class Main {
         // Display the locations of the depots, customers, and vehicles
         display.displayLocations(depotList, customerList, vehicleList);
 
+        // Create the new solution to solve
+        VRPSolution newSolution = new VRPSolution(depotList, customerList, vehicleList);
+        newSolution.initialize();
+
         // Create the MVRPSolver
-        VRPSolver solver = new VRPSolver();
-        solver.setAlgorithm(EVRPAlgorithm.TABU);
-        scoreDisplay.displayMessage("\nUsing Tabu Search Algorithm");
+        Solver<VRPSolution> solver = new Solver<VRPSolution>() {
+            @Override
+            public VRPSolution createInitialSolution() {
+                return newSolution;
+            }
+        };
+        solver.useAlgorithm(EVRPAlgorithm.TABU);
+        scoreDisplay.displayMessage("\nUsing Tabu Algorithm");
 
         // Measure the execution time of the solving task
         try {
-            // Create the new solution to solve
-            VRPSolution newSolution = new VRPSolution(depotList, customerList, vehicleList);
             display.displayMessage("New Solution:");
             display.displaySolution(newSolution);
-            
+
             PerformanceMeter.startMeasurement();
             VRPSolution optimalSolution = solver.solve(newSolution);
             PerformanceMeter.endMeasurement();
 
             display.displayMessage("\nOptimal Solution:");
             display.displaySolution(optimalSolution);
-            
+
             double executionTime = PerformanceMeter.getLastExecutionTimeSeconds();
-            scoreDisplay.displayMessage("Score: " + (optimalSolution != null ? optimalSolution.calculateScore() : "null") + "\nExecution time: " + String.format("%.6f", executionTime) + " seconds");
+            scoreDisplay
+                    .displayMessage("Score: " + (optimalSolution != null ? optimalSolution.calculateScore() : "null")
+                            + "\nExecution time: " + String.format("%.6f", executionTime) + " seconds");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -6,33 +6,29 @@ import api.solution.ProblemFactCollectionProperty;
 import solver.VehicleRoutingConstraintProvider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.HashSet;
 
-public class VRPSolution implements PlanningSolution, Cloneable {
+public class VRPSolution extends PlanningSolution {
     private List<Depot> depotList;
     private List<Customer> customerList;
     private List<Vehicle> vehicleList;
-    private HardSoftScore hardSoftScore;
 
     public VRPSolution() {
-        // Default constructor
+        depotList = new ArrayList<>();
+        customerList = new ArrayList<>();
+        vehicleList = new ArrayList<>();
     }
 
     public VRPSolution(List<Depot> depotList, List<Customer> customerList, List<Vehicle> vehicleList) {
         this.depotList = new ArrayList<>(depotList);
         this.customerList = new ArrayList<>(customerList);
         this.vehicleList = new ArrayList<>(vehicleList);
-        this.hardSoftScore = new HardSoftScore(this, new VehicleRoutingConstraintProvider().defineConstraints());
-        assignDepotsToVehicles();
-    }
-
-    private void assignDepotsToVehicles() {
-        for (int i = 0; i < vehicleList.size(); i++) {
-            Vehicle vehicle = vehicleList.get(i);
-            Depot depot = depotList.get(i % depotList.size());
-            vehicle.setDepot(depot);
-        }
     }
 
     @Override
@@ -42,28 +38,7 @@ public class VRPSolution implements PlanningSolution, Cloneable {
 
     @Override
     public double calculateScore() {
-        return hardSoftScore.calculateScore();
-    }
-
-    @Override
-    public VRPSolution clone() {
-        try {
-            VRPSolution clone = (VRPSolution) super.clone();
-            clone.depotList = depotList.stream()
-                    .map(depot -> new Depot(depot.getId(), depot.getLocation()))
-                    .collect(Collectors.toList());
-            clone.customerList = customerList.stream()
-                    .map(customer -> new Customer(customer.getId(), customer.getLocation(), customer.getDemand()))
-                    .collect(Collectors.toList());
-            clone.vehicleList = vehicleList.stream()
-                    .map(Vehicle::clone)
-                    .collect(Collectors.toList());
-            clone.hardSoftScore = new HardSoftScore(clone, new VehicleRoutingConstraintProvider().defineConstraints());
-            clone.assignDepotsToVehicles();
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError("Cloning should be supported", e);
-        }
+        return getHardSoftScore().calculateScore();
     }
 
     public List<Depot> getDepotList() {
@@ -76,5 +51,113 @@ public class VRPSolution implements PlanningSolution, Cloneable {
 
     public List<Vehicle> getVehicleList() {
         return new ArrayList<>(vehicleList);
+    }
+
+    @Override
+    protected HardSoftScore<? extends PlanningSolution> getHardSoftScore() {
+        return new HardSoftScore<>(this,
+                new VehicleRoutingConstraintProvider().defineConstraints());
+    }
+
+    @Override
+    public VRPSolution clone() {
+        return new VRPSolution(depotList, customerList, vehicleList);
+    }
+
+    @Override
+    public void swap(int pos1, int pos2) {
+        Collections.swap(customerList, pos1, pos2);
+    }
+
+    @Override
+    public void insert(int from, int to) {
+        customerList.add(to, customerList.remove(from));
+    }
+
+    @Override
+    public void invert(int start, int end) {
+        Collections.reverse(customerList.subList(start, end));
+    }
+
+    @Override
+    public boolean canAddElement(Object element) {
+        return true;
+    }
+
+    @Override
+    public void addElement(Object element) {
+        customerList.add((Customer) element);
+    }
+
+    @Override
+    public void initialize() {
+        Map<Depot, List<Customer>> depotCustomers = assignCustomersToDepots(this.depotList, this.customerList);
+        this.vehicleList.sort(Comparator.comparingInt(Vehicle::getCapacity).reversed());
+        assignVehiclesToDepots(this.vehicleList, this.depotList, depotCustomers);
+
+        Set<Customer> assignedCustomers = new HashSet<>();
+        for (Vehicle vehicle : this.getVehicleList()) {
+            List<Customer> customers = depotCustomers.get(vehicle.getDepot());
+            if (customers != null && !customers.isEmpty()) {
+                customers.sort(Comparator.comparingDouble(
+                        customer -> vehicle.getDepot().getLocation().getDistanceTo(customer.getLocation())));
+
+                for (Customer customer : customers) {
+                    if (!assignedCustomers.contains(customer) && vehicle.canAddCustomer(customer)) {
+                        vehicle.addCustomer(customer);
+                        assignedCustomers.add(customer);
+                    }
+                }
+            }
+        }
+
+        for (Vehicle vehicle : this.getVehicleList()) {
+            if (vehicle.getCustomerList().isEmpty()) {
+                for (Customer customer : this.getCustomerList()) {
+                    if (!assignedCustomers.contains(customer) && vehicle.canAddCustomer(customer)) {
+                        vehicle.addCustomer(customer);
+                        assignedCustomers.add(customer);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private Map<Depot, List<Customer>> assignCustomersToDepots(List<Depot> depots, List<Customer> customers) {
+        Map<Depot, List<Customer>> result = depots.stream()
+                .collect(Collectors.toMap(depot -> depot, depot -> new ArrayList<>()));
+
+        customers.forEach(customer -> result.get(findNearestDepot(customer, depots)).add(customer));
+
+        return result;
+    }
+
+    private Depot findNearestDepot(Customer customer, List<Depot> depots) {
+        return depots.stream()
+                .min(Comparator.comparingDouble(depot -> customer.getLocation().getDistanceTo(depot.getLocation())))
+                .orElseThrow(() -> new RuntimeException("No depot found"));
+    }
+
+    private void assignVehiclesToDepots(List<Vehicle> vehicles, List<Depot> depots,
+            Map<Depot, List<Customer>> depotCustomers) {
+        Map<Depot, Integer> depotTotalDemand = calculateDepotTotalDemand(depotCustomers);
+
+        vehicles.forEach(vehicle -> {
+            Depot bestDepot = depots.stream()
+                    .min(Comparator.comparingInt(
+                            depot -> Math.abs(vehicle.getCapacity() - depotTotalDemand.getOrDefault(depot, 0))))
+                    .orElse(depots.get(0));
+
+            vehicle.setDepot(bestDepot);
+            depotTotalDemand.put(bestDepot, depotTotalDemand.getOrDefault(bestDepot, 0) - vehicle.getCapacity());
+        });
+    }
+
+    private Map<Depot, Integer> calculateDepotTotalDemand(Map<Depot, List<Customer>> depotCustomers) {
+        return depotCustomers.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream().mapToInt(Customer::getDemand).sum()));
     }
 }
