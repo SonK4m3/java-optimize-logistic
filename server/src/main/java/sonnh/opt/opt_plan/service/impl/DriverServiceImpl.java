@@ -153,4 +153,9 @@ public class DriverServiceImpl implements DriverService {
 						&& driver.getCurrentLongitude() != 0.0)
 				.collect(Collectors.toList());
 	}
+
+	@Override
+	public Driver getDriverByUserId(Long userId) {
+		return driverRepository.findByUserId(userId);
+	}
 }

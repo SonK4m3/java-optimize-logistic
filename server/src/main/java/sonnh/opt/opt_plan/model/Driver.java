@@ -27,7 +27,7 @@ import sonnh.opt.opt_plan.constant.enums.VehicleType;
 @JsonIgnoreProperties({
 		"hibernateLazyInitializer", "handler"
 })
-public class Driver {
+public class Driver implements Cloneable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -83,7 +83,9 @@ public class Driver {
 	}
 
 	@PreUpdate
-	protected void onUpdate() { lastUpdated = LocalDateTime.now(); }
+	protected void onUpdate() {
+		lastUpdated = LocalDateTime.now();
+	}
 
 	/**
 	 * Updates driver's current location with timestamp
@@ -117,5 +119,24 @@ public class Driver {
 
 		this.rating = Objects.isNull(this.rating) ? newRating
 				: (this.rating + newRating) / 2;
+	}
+
+	@Override
+	public Driver clone() {
+		return Driver.builder()
+				.id(id)
+				.user(user)
+				.phone(phone)
+				.licenseNumber(licenseNumber)
+				.vehicleType(vehicleType)
+				.vehiclePlate(vehiclePlate)
+				.status(status)
+				.currentLatitude(currentLatitude)
+				.currentLongitude(currentLongitude)
+				.lastLocationUpdate(lastLocationUpdate)
+				.rating(rating)
+				.createdAt(createdAt)
+				.lastUpdated(lastUpdated)
+				.build();
 	}
 }

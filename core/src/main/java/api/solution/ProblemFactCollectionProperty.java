@@ -1,4 +1,4 @@
 package api.solution;
 
-public abstract class ProblemFactCollectionProperty {
+public interface ProblemFactCollectionProperty {
 }

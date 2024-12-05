@@ -2,7 +2,6 @@ D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\config\au
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\config\auth\WebSecurityConfig.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\config\JacksonConfig.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\config\OpenApiConfig.java
-D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\config\VRPConfig.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\constant\common\Api.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\constant\enums\CargoType.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\constant\enums\CustomerType.java
@@ -58,7 +57,6 @@ D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\controlle
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\controller\SupplierController.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\controller\TaskAssignmentController.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\controller\VehicleController.java
-D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\controller\VRPController.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\controller\WarehouseController.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\exception\AuthenticationException.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\exception\BusinessException.java
@@ -103,8 +101,11 @@ D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\Tas
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\User.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\UserDetailsImpl.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\Vehicle.java
+D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\VRPSolution.java
+D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\VRPSolver.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\VRPTask.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\Warehouse.java
+D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\WarehouseDriver.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\WarehouseProduct.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\WarehouseReceipt.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\model\WorkShift.java
@@ -247,7 +248,6 @@ D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\i
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\impl\UserDetailsServiceImpl.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\impl\UserServiceImpl.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\impl\VehicleServiceImpl.java
-D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\impl\VRPServiceImpl.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\impl\WarehouseServiceImpl.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\InventoryService.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\OrderService.java
@@ -262,8 +262,8 @@ D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\S
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\TaskAssignmentService.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\UserService.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\VehicleService.java
-D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\VRPService.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\service\WarehouseService.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\utils\JwtRequestFilter.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\utils\JwtUtil.java
 D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\utils\SecurityUtils.java
+D:\Java\opt-planner-core-logic\server\src\main\java\sonnh\opt\opt_plan\utils\VRPManager.java

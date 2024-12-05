@@ -27,7 +27,7 @@ import sonnh.opt.opt_plan.constant.enums.DeliveryAssignmentStatus;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeliveryAssignment {
+public class DeliveryAssignment implements Cloneable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -57,4 +57,10 @@ public class DeliveryAssignment {
 
 	@Column
 	private LocalDateTime expiresAt;
+
+	@Override
+	public DeliveryAssignment clone() {
+		return new DeliveryAssignment(id, delivery, driver, warehouseIds, assignedAt, status, rejectionReason,
+				respondedAt, expiresAt);
+	}
 }

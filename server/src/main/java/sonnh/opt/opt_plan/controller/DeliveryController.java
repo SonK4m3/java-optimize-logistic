@@ -41,4 +41,17 @@ public class DeliveryController {
 						deliveryService.suggestDriversForDelivery(request.getDeliveryId(),
 								request.getDriverNumber(), request.getDriverIds())));
 	}
+
+	@PostMapping("/suggest-drivers-vrp")
+	public ResponseEntity<ApiResponse<SuggestDriversResponse>> suggestDriversForDeliveryVRP(
+			@Valid @RequestBody SuggestedDriversRequest request) {
+		try {
+			SuggestDriversResponse response = deliveryService.suggestDriversForDeliveryVRP(request.getDeliveryId(),
+					request.getDriverNumber(), request.getDriverIds());
+			return ResponseEntity.ok(ApiResponse.success("Suggested drivers fetched successfully", response));
+		} catch (Exception e) {
+			return ResponseEntity.ok(ApiResponse.error(e.getMessage()));
+		}
+
+	}
 }

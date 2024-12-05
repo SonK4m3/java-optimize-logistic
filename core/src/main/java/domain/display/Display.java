@@ -11,7 +11,5 @@ public interface Display {
 
     void displayVehicles(List<Vehicle> vehicles);
 
-    void displaySolution(VRPSolution solution);
-
     void displayLocations(List<Depot> depots, List<Customer> customers, List<Vehicle> vehicles);
 }

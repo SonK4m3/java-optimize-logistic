@@ -7,13 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import java.util.List;
 
+import api.solution.ProblemFactCollectionProperty;
+
 @Entity
 @Table(name = "customers")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Customer {
+public class Customer implements ProblemFactCollectionProperty {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

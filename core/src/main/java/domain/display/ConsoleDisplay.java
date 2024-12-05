@@ -19,18 +19,6 @@ public class ConsoleDisplay implements Display {
         vehicles.forEach(this::printVehicle);
     }
 
-    @Override
-    public void displaySolution(VRPSolution solution) {
-        solution.getVehicleList().forEach(vehicle -> {
-            System.out.print("Vehicle " + vehicle.getId() + " : D" + vehicle.getDepot().getId() + " ");
-            vehicle.getCustomerList().forEach(customer -> {
-                System.out.print(customer.getId() + " ");
-            });
-            System.out.println();
-        });
-        System.out.println("Total: " + String.format("%.2f", solution.calculateScore()));
-    }
-
     private void printCustomer(Customer customer) {
         System.out.println("Customer ID: " + customer.getId());
         System.out.println("Location: (" + customer.getLocation().getX() + ", " + customer.getLocation().getY() + ")");

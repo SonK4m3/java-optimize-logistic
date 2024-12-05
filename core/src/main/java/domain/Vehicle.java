@@ -4,11 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import lombok.Builder;
-import lombok.Data;
-
-@Data
-@Builder
 public class Vehicle implements Cloneable {
     private final long id;
     private int capacity;

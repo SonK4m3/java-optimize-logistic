@@ -3,11 +3,7 @@ package domain;
 import java.util.Objects;
 
 import domain.geo.EuclideanDistanceCalculator;
-import lombok.Builder;
-import lombok.Data;
 
-@Data
-@Builder
 public class Location {
     private final int id;
     private final double x;

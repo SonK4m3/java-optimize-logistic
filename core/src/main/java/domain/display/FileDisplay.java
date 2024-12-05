@@ -7,7 +7,6 @@ import java.util.List;
 
 import domain.Customer;
 import domain.Depot;
-import domain.VRPSolution;
 import domain.Vehicle;
 
 public class FileDisplay implements Display {
@@ -56,27 +55,6 @@ public class FileDisplay implements Display {
                 writer.write("Capacity: " + vehicle.getCapacity() + "\n");
                 writer.write("--------------------\n");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void displaySolution(VRPSolution solution) {
-        try (BufferedWriter writer = getWriter()) {
-            if (solution == null) {
-                writer.write("Solution is null\n");
-                return;
-            }
-            for (Vehicle vehicle : solution.getVehicleList()) {
-                Depot depot = vehicle.getDepot();
-                writer.write("Vehicle " + vehicle.getId() + (depot != null ? " : D" + depot.getId() : " : null") + " ");
-                for (Customer customer : vehicle.getCustomerList()) {
-                    writer.write(customer.getId() + " ");
-                }
-                writer.write("\n");
-            }
-            writer.write("Total: " + String.format("%.2f", solution.calculateScore()) + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }

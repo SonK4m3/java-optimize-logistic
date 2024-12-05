@@ -1,4 +1,4 @@
-package domain.solver;
+package api.algorithm;
 
 public enum EVRPAlgorithm {
     GREED,

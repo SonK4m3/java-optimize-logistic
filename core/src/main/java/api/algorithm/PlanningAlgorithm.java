@@ -2,6 +2,6 @@ package api.algorithm;
 
 import api.solution.PlanningSolution;
 
-public interface PlanningAlgorithm<S extends PlanningSolution> {
-    S execute(S newSolution);
+public interface PlanningAlgorithm<PlanningSolution> {
+    PlanningSolution execute(PlanningSolution newSolution);
 }

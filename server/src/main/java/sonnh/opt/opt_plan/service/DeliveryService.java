@@ -22,4 +22,7 @@ public interface DeliveryService {
 
 	SuggestDriversResponse suggestDriversForDelivery(Long deliveryId, Long driverNumber,
 			List<Long> driverIds);
+
+	SuggestDriversResponse suggestDriversForDeliveryVRP(Long deliveryId, Long driverNumber,
+			List<Long> driverIds);
 }

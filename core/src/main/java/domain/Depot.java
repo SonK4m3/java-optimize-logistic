@@ -2,11 +2,6 @@ package domain;
 
 import java.util.Objects;
 
-import lombok.Builder;
-import lombok.Data;
-
-@Data
-@Builder
 public class Depot {
     private final long id;
     private final Location location;

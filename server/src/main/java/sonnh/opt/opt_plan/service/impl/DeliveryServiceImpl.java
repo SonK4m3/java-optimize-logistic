@@ -14,6 +14,8 @@ import sonnh.opt.opt_plan.payload.response.DeliveryMetrics;
 import sonnh.opt.opt_plan.payload.response.SuggestDriversResponse;
 import sonnh.opt.opt_plan.payload.dto.DriverDTO;
 
+import api.solver.Solver;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -145,5 +147,52 @@ public class DeliveryServiceImpl implements DeliveryService {
                                         "Drivers not found with ids: " + driverIds);
                 }
                 return drivers;
+        }
+
+        @Override
+        public SuggestDriversResponse suggestDriversForDeliveryVRP(Long deliveryId, Long driverNumber,
+                        List<Long> driverIds) {
+
+                Delivery delivery = getDeliveryOrThrow(deliveryId);
+                List<Driver> drivers = this.getDriversOrThrow(driverIds);
+                SuggestDriversResponse response = SuggestDriversResponse.builder()
+                                .build();
+
+                // Get required vehicle type based on order weight
+                Double orderWeight = delivery.getOrder().getTotalWeight();
+                VehicleType requiredVehicleType = VehicleType
+                                .getRequiredVehicleType(orderWeight);
+
+                // Filter available drivers with matching vehicle type
+                List<Driver> availableDrivers = drivers.stream().filter(driver -> driver
+                                .getStatus() == DriverStatus.READY_TO_ACCEPT_ORDERS
+                                && driver.getVehicleType() == requiredVehicleType)
+                                .limit(driverNumber).collect(Collectors.toList());
+                // Filter warehouses with matching vehicle type
+                List<Warehouse> matchingWarehouses = warehouseRepository
+                                .findAllById(delivery.getWarehouseList()).stream()
+                                .collect(Collectors.toList());
+
+                // Ensure we have enough warehouses
+                if (matchingWarehouses.isEmpty()) {
+                        return response;
+                }
+
+                List<OrderDetail> orderDetails = delivery.getOrder().getOrderDetails();
+
+                System.out.println("Start solving VRP");
+
+                VRPSolver solver = new VRPSolver(
+                                new VRPSolution(matchingWarehouses, orderDetails,
+                                                availableDrivers, driverNumber));
+                VRPSolution result = solver.solve();
+                System.out.println("End solving VRP");
+
+                for (WarehouseDriver warehouseDriver : result.getWarehouseDrivers()) {
+                        response.addDriver(DriverDTO.fromEntity(warehouseDriver.getDriver()),
+                                        warehouseDriver.getWarehouseIds());
+                }
+
+                return response;
         }
 }

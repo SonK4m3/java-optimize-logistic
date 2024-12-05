@@ -1,6 +1,6 @@
 import domain.*;
 import domain.display.Display;
-import domain.solver.EVRPAlgorithm;
+import api.algorithm.EVRPAlgorithm;
 import api.solver.Solver;
 import domain.time.PerformanceMeter;
 import domain.display.DisplayFactory;
@@ -20,41 +20,41 @@ public class Main {
     static final int TABU_LIST_SIZE = 1000;
 
     public static void main(String[] args) {
-        // Display the locations of the depots, customers, and vehicles
-        display.displayLocations(depotList, customerList, vehicleList);
+        // // Display the locations of the depots, customers, and vehicles
+        // display.displayLocations(depotList, customerList, vehicleList);
 
-        // Create the new solution to solve
-        VRPSolution newSolution = new VRPSolution(depotList, customerList, vehicleList);
-        newSolution.initialize();
+        // // Create the new solution to solve
+        // VRPSolution newSolution = new VRPSolution(depotList, customerList, vehicleList);
+        // newSolution.initialize();
 
-        // Create the MVRPSolver
-        Solver<VRPSolution> solver = new Solver<VRPSolution>() {
-            @Override
-            public VRPSolution createInitialSolution() {
-                return newSolution;
-            }
-        };
-        solver.useAlgorithm(EVRPAlgorithm.TABU);
-        scoreDisplay.displayMessage("\nUsing Tabu Algorithm");
+        // // Create the MVRPSolver
+        // Solver<VRPSolution> solver = new Solver<VRPSolution>() {
+        //     @Override
+        //     public VRPSolution createInitialSolution() {
+        //         return newSolution;
+        //     }
+        // };
+        // solver.useAlgorithm(EVRPAlgorithm.TABU);
+        // scoreDisplay.displayMessage("\nUsing Tabu Algorithm");
 
-        // Measure the execution time of the solving task
-        try {
-            display.displayMessage("New Solution:");
-            display.displaySolution(newSolution);
+        // // Measure the execution time of the solving task
+        // try {
+        //     display.displayMessage("New Solution:");
+        //     display.displaySolution(newSolution);
 
-            PerformanceMeter.startMeasurement();
-            VRPSolution optimalSolution = solver.solve(newSolution);
-            PerformanceMeter.endMeasurement();
+        //     PerformanceMeter.startMeasurement();
+        //     VRPSolution optimalSolution = solver.solve(newSolution);
+        //     PerformanceMeter.endMeasurement();
 
-            display.displayMessage("\nOptimal Solution:");
-            display.displaySolution(optimalSolution);
+        //     display.displayMessage("\nOptimal Solution:");
+        //     display.displaySolution(optimalSolution);
 
-            double executionTime = PerformanceMeter.getLastExecutionTimeSeconds();
-            scoreDisplay
-                    .displayMessage("Score: " + (optimalSolution != null ? optimalSolution.calculateScore() : "null")
-                            + "\nExecution time: " + String.format("%.6f", executionTime) + " seconds");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //     double executionTime = PerformanceMeter.getLastExecutionTimeSeconds();
+        //     scoreDisplay
+        //             .displayMessage("Score: " + (optimalSolution != null ? optimalSolution.calculateScore() : "null")
+        //                     + "\nExecution time: " + String.format("%.6f", executionTime) + " seconds");
+        // } catch (Exception e) {
+        //     e.printStackTrace();
+        // }
     }
 }

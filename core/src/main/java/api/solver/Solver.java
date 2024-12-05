@@ -1,31 +1,28 @@
 package api.solver;
 
 import api.algorithm.PlanningAlgorithm;
+import api.algorithm.implement.TabuSearchAlgorithm;
 import api.solution.PlanningSolution;
-import domain.solver.EVRPAlgorithm;
 import api.algorithm.AlgorithmFactory;
 
 public abstract class Solver<S extends PlanningSolution> {
-    private static final EVRPAlgorithm DEFAULT_ALGORITHM = EVRPAlgorithm.TABU;
-    protected PlanningAlgorithm<S> algorithm;
-    protected S initialSolution;
-    protected S currentSolution;
-    protected S optimalSolution;
+    private static final String DEFAULT_ALGORITHM = "TABU";
+    public PlanningAlgorithm<S> algorithm;
+    public S initialSolution;
+    public S currentSolution;
+    public S optimalSolution;
 
-    protected Solver() {
-        this.algorithm = null;
+    public Solver() {
         this.initialSolution = this.createInitialSolution();
 
-        useAlgorithm(DEFAULT_ALGORITHM);
+        this.algorithm = new TabuSearchAlgorithm<S>();
+        System.out.println("Algorithm: " + this.algorithm);
     }
 
-    protected Solver(PlanningAlgorithm<S> algorithm) {
-        this.algorithm = algorithm;
-        this.initialSolution = this.createInitialSolution();
-    }
-
-    public S solve(S initialSolution) {
+    public S solve() {
         validateInputs(initialSolution);
+
+        System.out.println("Algorithm: " + this.algorithm);
 
         this.currentSolution = initialSolution;
         this.optimalSolution = algorithm.execute(initialSolution);
@@ -33,10 +30,10 @@ public abstract class Solver<S extends PlanningSolution> {
         return this.optimalSolution;
     }
 
-    public void useAlgorithm(EVRPAlgorithm algorithm) {
-        PlanningAlgorithm<S> planningAlgorithm = AlgorithmFactory.getAlgorithm(algorithm);
-        this.algorithm = planningAlgorithm;
-    }
+    // public void useAlgorithm(String algorithm) {
+    //     PlanningAlgorithm<PlanningSolution> planningAlgorithm = AlgorithmFactory.getAlgorithm(algorithm);
+    //     this.algorithm = planningAlgorithm;
+    // }
 
     public S getCurrentSolution() {
         return this.currentSolution;

@@ -27,4 +27,6 @@ public interface DriverService {
 	Driver getDriverOrThrow(Long id);
 
 	List<Driver> getDriversOrThrow(List<Long> driverIds);
+
+	Driver getDriverByUserId(Long userId);
 }

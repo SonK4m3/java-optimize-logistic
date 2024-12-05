@@ -93,4 +93,10 @@ public class DriverController {
 						driverService.getAvailableDriversForDelivery(deliveryId).stream()
 								.map(DriverDTO::fromEntity).toList()));
 	}
+
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<ApiResponse<DriverDTO>> getDriverByUserId(@PathVariable Long userId) {
+		return ResponseEntity.ok(ApiResponse.success("Driver fetched successfully",
+				DriverDTO.fromEntity(driverService.getDriverByUserId(userId))));
+	}
 }
