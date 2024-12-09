@@ -11,7 +11,7 @@ import api.solution.PlanningSolution;
 public class TabuSearchAlgorithm<Solution_ extends PlanningSolution> implements PlanningAlgorithm<Solution_> {
     private static final int MAX_ITERATION = 1000000;
     private static final int MAX_ITERATIONS_WITHOUT_IMPROVEMENT = 100000;
-    private static final int DEFAULT_TABU_LIST_SIZE = 10;
+    private static final int DEFAULT_TABU_LIST_SIZE = 10000;
 
     private final Queue<Solution_> tabuList;
     private Solution_ bestSolution;
